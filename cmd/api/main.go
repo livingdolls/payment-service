@@ -12,6 +12,10 @@ import (
 	"github.com/livingdolls/payment-service/internal/config"
 	"github.com/livingdolls/payment-service/internal/database"
 	router "github.com/livingdolls/payment-service/internal/http"
+	"github.com/livingdolls/payment-service/internal/http/handler"
+
+	"github.com/livingdolls/payment-service/internal/modules/payment"
+	paymentpostgres "github.com/livingdolls/payment-service/internal/modules/payment/postgres"
 )
 
 func main() {
@@ -31,7 +35,13 @@ func main() {
 
 	defer db.Close()
 
-	router := router.NewRouter(db)
+	paymentRepository := paymentpostgres.NewRepository(db)
+
+	paymentService := payment.NewService(paymentRepository)
+
+	paymentHandler := handler.NewPaymentHandler(paymentService)
+
+	router := router.NewRouter(db, paymentHandler)
 
 	server := &http.Server{
 		Addr:              ":" + cfg.HTTPPort,

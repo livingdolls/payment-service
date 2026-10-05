@@ -14,9 +14,15 @@ type CreateInput struct {
 	Currency string
 }
 
+type Creator interface {
+	Create(ctx context.Context, input CreateInput) (*PaymentIntent, error)
+}
+
 type Service struct {
 	repository Repository
 }
+
+var _ Creator = (*Service)(nil)
 
 func NewService(repository Repository) *Service {
 	return &Service{

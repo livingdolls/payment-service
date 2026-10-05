@@ -7,9 +7,10 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/livingdolls/payment-service/internal/http/handler"
 )
 
-func NewRouter(db *pgxpool.Pool) *gin.Engine {
+func NewRouter(db *pgxpool.Pool, paymentHandler *handler.PaymentHandler) *gin.Engine {
 	router := gin.New()
 
 	router.Use(gin.Logger())
@@ -33,6 +34,12 @@ func NewRouter(db *pgxpool.Pool) *gin.Engine {
 			"database": "healthy",
 		})
 	})
+
+	v1 := router.Group("/v1")
+
+	payments := v1.Group("/payments")
+
+	payments.POST("", paymentHandler.Create)
 
 	return router
 }
