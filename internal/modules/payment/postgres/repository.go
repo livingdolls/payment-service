@@ -4,17 +4,17 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/livingdolls/payment-service/internal/database"
 	"github.com/livingdolls/payment-service/internal/modules/payment"
 )
 
 type Repository struct {
-	db *pgxpool.Pool
+	db database.DBTX
 }
 
 var _ payment.Repository = (*Repository)(nil)
 
-func NewRepository(db *pgxpool.Pool) *Repository {
+func NewRepository(db database.DBTX) *Repository {
 	return &Repository{
 		db: db,
 	}
