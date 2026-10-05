@@ -74,13 +74,14 @@ func (r *Repository) Acquire(ctx context.Context, operation string, key string, 
 		&idemRecord.ResponseBody,
 		&idemRecord.CreatedAt,
 		&idemRecord.UpdatedAt,
+		&idemRecord.ExpiresAt,
 	)
 
 	if errIdem == nil {
 		return idemRecord, true, nil
 	}
 
-	if !errors.Is(err, pgx.ErrNoRows) {
+	if !errors.Is(errIdem, pgx.ErrNoRows) {
 		return nil, false, fmt.Errorf("insert idempotency key: %w", err)
 	}
 

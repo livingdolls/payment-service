@@ -4,13 +4,18 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
+
+type TransactionManager interface {
+	WithinTransaction(ctx context.Context, fn func(db DBTX) error) error
+}
 
 type Transactor struct {
 	db *pgxpool.Pool
 }
+
+var _ TransactionManager = (*Transactor)(nil)
 
 func NewTransactor(db *pgxpool.Pool) *Transactor {
 	return &Transactor{
@@ -18,7 +23,7 @@ func NewTransactor(db *pgxpool.Pool) *Transactor {
 	}
 }
 
-func (t *Transactor) WithinTransaction(ctx context.Context, fn func(tx pgx.Tx) error) error {
+func (t *Transactor) WithinTransaction(ctx context.Context, fn func(db DBTX) error) error {
 	tx, err := t.db.Begin(ctx)
 
 	if err != nil {

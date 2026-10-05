@@ -6,11 +6,13 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/livingdolls/payment-service/internal/application"
+	"github.com/livingdolls/payment-service/internal/modules/idempotency"
 	"github.com/livingdolls/payment-service/internal/modules/payment"
 )
 
 type PaymentHandler struct {
-	service payment.Creator
+	createPaymentUseCase *application.CreatePaymentUseCase
 }
 
 type createPaymentRequest struct {
@@ -44,9 +46,9 @@ type errorResponse struct {
 	} `json:"error"`
 }
 
-func NewPaymentHandler(service payment.Creator) *PaymentHandler {
+func NewPaymentHandler(createPaymentUsecase *application.CreatePaymentUseCase) *PaymentHandler {
 	return &PaymentHandler{
-		service: service,
+		createPaymentUseCase: createPaymentUsecase,
 	}
 }
 
@@ -64,22 +66,25 @@ func (h *PaymentHandler) Create(c *gin.Context) {
 		return
 	}
 
-	input := payment.CreateInput{
-		OrderID:  request.OrderID,
-		Amount:   request.Amount,
-		Currency: request.Currency,
-	}
-
-	result, err := h.service.Create(c.Request.Context(), input)
+	result, err := h.createPaymentUseCase.Execute(
+		c.Request.Context(),
+		application.CreatePaymentCommand{
+			IdempotencyKey: c.GetHeader("Idempotency-Key"),
+			OrderID:        request.OrderID,
+			Amount:         request.Amount,
+			Currency:       request.Currency,
+		},
+	)
 
 	if err != nil {
 		h.handleCreateError(c, err)
 		return
 	}
 
-	c.JSON(
-		http.StatusCreated,
-		newPaymentResponse(result),
+	c.Data(
+		result.StatusCode,
+		"application/json; charset=utf-8",
+		result.Body,
 	)
 }
 
@@ -123,6 +128,14 @@ func (h *PaymentHandler) handleCreateError(c *gin.Context, err error) {
 		respondError(c, http.StatusUnprocessableEntity, "INVALID_CURRENCY", "currency is invalid")
 	case errors.Is(err, payment.ErrUnsupportedCurrency):
 		respondError(c, http.StatusUnprocessableEntity, "UNSUPPORTED_CURRENCY", "currency is not supported")
+	case errors.Is(err, idempotency.ErrKeyRequired):
+		respondError(c, http.StatusBadRequest, "IDEMPOTENCY_KEY_REQUIRED", "Idempotency-Key header is required")
+	case errors.Is(err, idempotency.ErrKeyTooLong):
+		respondError(c, http.StatusBadRequest, "IDEMPOTENCY_KEY_TOO_LONG", "Idempotency-Key is too long")
+	case errors.Is(err, idempotency.ErrConflict):
+		respondError(c, http.StatusConflict, "IDEMPOTENCY_CONFLICT", "idempotency key was already used with a different request")
+	case errors.Is(err, idempotency.ErrInProgress):
+		respondError(c, http.StatusConflict, "IDEMPOTENCY_IN_PROGRESS", "request with this idempotency key is still processing")
 	default:
 		respondError(c, http.StatusInternalServerError, "INTERNAL_ERROR", "internal server error")
 	}

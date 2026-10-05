@@ -9,13 +9,11 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/livingdolls/payment-service/internal/application"
 	"github.com/livingdolls/payment-service/internal/config"
 	"github.com/livingdolls/payment-service/internal/database"
 	router "github.com/livingdolls/payment-service/internal/http"
 	"github.com/livingdolls/payment-service/internal/http/handler"
-
-	"github.com/livingdolls/payment-service/internal/modules/payment"
-	paymentpostgres "github.com/livingdolls/payment-service/internal/modules/payment/postgres"
 )
 
 func main() {
@@ -35,11 +33,9 @@ func main() {
 
 	defer db.Close()
 
-	paymentRepository := paymentpostgres.NewRepository(db)
-
-	paymentService := payment.NewService(paymentRepository)
-
-	paymentHandler := handler.NewPaymentHandler(paymentService)
+	transactionManager := database.NewTransactor(db)
+	createPaymentUseCase := application.NewCreatePaymentUseCase(transactionManager)
+	paymentHandler := handler.NewPaymentHandler(createPaymentUseCase)
 
 	router := router.NewRouter(db, paymentHandler)
 
