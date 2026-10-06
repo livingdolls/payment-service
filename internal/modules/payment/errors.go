@@ -10,4 +10,6 @@ var (
 	ErrUnsupportedCurrency      = errors.New("unsupported currency")
 	ErrInvalidAttemptTransition = errors.New("invalid payment attempt state transition")
 	ErrAttemptConcurrentUpdate  = errors.New("payment attempt was modified concurrently")
+	ErrInvalidPaymentTransition = errors.New("invalid payment state transition")
+	ErrPaymentConcurrentUpdate  = errors.New("payment was modifed concurrently")
 )

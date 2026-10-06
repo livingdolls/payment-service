@@ -12,4 +12,6 @@ type Repository interface {
 		ctx context.Context,
 		id string,
 	) (*PaymentIntent, error)
+
+	Update(ctx context.Context, p *PaymentIntent, expectedVersion int64) error
 }

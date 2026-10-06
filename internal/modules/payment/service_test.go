@@ -11,6 +11,11 @@ type fakeRepository struct {
 	created *PaymentIntent
 }
 
+// Update implements [Repository].
+func (r *fakeRepository) Update(ctx context.Context, payment *PaymentIntent, expectedVersion int64) error {
+	panic("unimplemented")
+}
+
 var _ Repository = (*fakeRepository)(nil)
 
 func (r *fakeRepository) Create(

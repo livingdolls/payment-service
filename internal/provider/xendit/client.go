@@ -162,22 +162,34 @@ func mapHTTPError(statusCode int, body []byte) error {
 	}
 }
 
-func mapPaymentStatus(status string) provider.PaymentStatus {
+func mapPaymentStatus(
+	status string,
+) provider.PaymentStatus {
 	switch status {
-	case "PENDING":
+
+	case "PENDING",
+		"ACCEPTING_PAYMENTS":
+
 		return provider.PaymentStatusPending
+
 	case "REQUIRES_ACTION":
 		return provider.PaymentStatusRequiresAction
-	case "AWAITING_CAPTURE":
+
+	case "AUTHORIZED":
 		return provider.PaymentStatusAuthorized
+
 	case "SUCCEEDED":
 		return provider.PaymentStatusSucceeded
+
 	case "FAILED":
 		return provider.PaymentStatusFail
+
 	case "EXPIRED":
 		return provider.PaymentStatusExpired
-	case "CANCELED", "VOIDED":
+
+	case "CANCELED":
 		return provider.PaymentStatusCanceled
+
 	default:
 		return provider.PaymentStatusUnknown
 	}

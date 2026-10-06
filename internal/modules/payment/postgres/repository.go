@@ -2,8 +2,10 @@ package postgres
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/livingdolls/payment-service/internal/database"
 	"github.com/livingdolls/payment-service/internal/modules/payment"
 )
@@ -102,4 +104,50 @@ func (r *Repository) GetByID(ctx context.Context, id string) (*payment.PaymentIn
 	}
 
 	return &p, nil
+}
+
+// Update implements [payment.Repository].
+func (r *Repository) Update(ctx context.Context, p *payment.PaymentIntent, expectedVersion int64) error {
+	const query = `
+		UPDATE payment_intents
+		SET
+			status = $1,
+			caputred_amount = $2,
+			refunded_amount = $3,
+
+			version = version + 1,
+			updated_at = NOW()
+		WHERE
+			id = $4 AND version = $5
+
+		RETURNING
+			version,
+			updated_at
+	`
+
+	err := r.db.QueryRow(
+		ctx,
+		query,
+		p.Status,
+		p.CapturedAmount,
+		p.RefundedAmount,
+		p.ID,
+		expectedVersion,
+	).Scan(
+		&p.Version,
+		&p.UpdatedAt,
+	)
+
+	if err == nil {
+		return nil
+	}
+
+	if errors.Is(err, pgx.ErrNoRows) {
+		return payment.ErrPaymentConcurrentUpdate
+	}
+
+	return fmt.Errorf(
+		"update payment intent: %w",
+		err,
+	)
 }

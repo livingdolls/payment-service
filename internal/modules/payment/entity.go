@@ -44,3 +44,61 @@ type PaymentIntent struct {
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }
+
+func (p *PaymentIntent) TransitionTo(next Status) error {
+	if p.Status == next {
+		return nil
+	}
+
+	if !canTransitionPayment(p.Status, next) {
+		return ErrInvalidPaymentTransition
+	}
+
+	p.Status = next
+
+	return nil
+}
+
+func canTransitionPayment(current Status, next Status) bool {
+	switch current {
+	case StatusCreated:
+		switch next {
+		case StatusProcessing, StatusFailed, StatusCanceled:
+
+			return true
+		}
+
+	case StatusProcessing:
+		switch next {
+		case StatusRequiresAction, StatusAuthorized, StatusCaptured, StatusFailed, StatusCanceled, StatusExpired:
+
+			return true
+		}
+
+	case StatusRequiresAction:
+		switch next {
+		case StatusProcessing, StatusAuthorized, StatusCaptured, StatusFailed, StatusCanceled, StatusExpired:
+
+			return true
+		}
+
+	case StatusAuthorized:
+		switch next {
+		case StatusCaptured, StatusFailed, StatusCanceled:
+
+			return true
+		}
+
+	case StatusCaptured:
+		switch next {
+		case StatusPartiallyCaptured, StatusRefunded:
+
+			return true
+		}
+
+	case StatusRefunded:
+		return next == StatusRefunded
+	}
+
+	return false
+}

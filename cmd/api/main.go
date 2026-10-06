@@ -25,7 +25,6 @@ func main() {
 	}
 
 	xenditProvider := xendit.NewClient(cfg.XenditSecretKey, cfg.XenditBaseURL)
-	_ = xenditProvider
 
 	ctx := context.Background()
 
@@ -38,8 +37,11 @@ func main() {
 	defer db.Close()
 
 	transactionManager := database.NewTransactor(db)
+	processPaymentUseCase := application.NewProcessPaymentUseCase(transactionManager, xenditProvider)
 	createPaymentUseCase := application.NewCreatePaymentUseCase(transactionManager)
 	paymentHandler := handler.NewPaymentHandler(createPaymentUseCase)
+
+	_ = processPaymentUseCase
 
 	router := router.NewRouter(db, paymentHandler)
 
