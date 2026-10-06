@@ -14,6 +14,7 @@ import (
 	"github.com/livingdolls/payment-service/internal/database"
 	router "github.com/livingdolls/payment-service/internal/http"
 	"github.com/livingdolls/payment-service/internal/http/handler"
+	"github.com/livingdolls/payment-service/internal/provider/xendit"
 )
 
 func main() {
@@ -22,6 +23,9 @@ func main() {
 		slog.Error("failed to load config", "error", err)
 		os.Exit(1)
 	}
+
+	xenditProvider := xendit.NewClient(cfg.XenditSecretKey, cfg.XenditBaseURL)
+	_ = xenditProvider
 
 	ctx := context.Background()
 
