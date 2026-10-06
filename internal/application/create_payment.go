@@ -141,6 +141,20 @@ func (u *CreatePaymentUseCase) Execute(ctx context.Context, command CreatePaymen
 				},
 			)
 
+			attemptRepository := paymentpostgres.NewAttemptRepository(db)
+
+			attempt := &payment.PaymentAttempt{
+				PaymentIntentID:        paymentIntent.ID,
+				AttemptNumber:          1,
+				Provider:               payment.ProviderXendit,
+				ProviderIdempotencyKey: newProviderIdempotencyKey(paymentIntent.ReferenceID, 1),
+				Status:                 payment.AttemptStatusCreated,
+			}
+
+			if err := attemptRepository.CreateAttempt(ctx, attempt); err != nil {
+				return fmt.Errorf("create payment attempt: %w", err)
+			}
+
 			if err != nil {
 				return err
 			}
@@ -230,4 +244,8 @@ func dereferenceStatus(status *int) int {
 	}
 
 	return *status
+}
+
+func newProviderIdempotencyKey(referenceID string, attemptNumber int) string {
+	return fmt.Sprintf("%s:ATTEMPT:%d:CREATE", referenceID, attemptNumber)
 }
