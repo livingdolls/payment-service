@@ -42,6 +42,67 @@ type PaymentAttempt struct {
 
 	ProviderResponse []byte
 
+	Version int64
+
 	CreatedAt time.Time
 	UpdatedAt time.Time
+}
+
+func (a *PaymentAttempt) TransitionTo(next AttemptStatus) error {
+	if a.Status == next {
+		return nil
+	}
+
+	return nil
+}
+
+func canTransitionAttempt(current AttemptStatus, next AttemptStatus) bool {
+	switch current {
+	case AttemptStatusCreated:
+		return next == AttemptStatusRequestingProvider
+	case AttemptStatusRequestingProvider:
+		switch next {
+		case AttemptStatusRequiresAction,
+			AttemptStatusAuthorized,
+			AttemptStatusCaptured,
+			AttemptStatusFailed,
+			AttemptStatusExpired,
+			AttemptStatusUnknown:
+
+			return true
+		}
+	case AttemptStatusRequiresAction:
+		switch next {
+		case AttemptStatusAuthorized,
+			AttemptStatusCaptured,
+			AttemptStatusFailed,
+			AttemptStatusExpired,
+			AttemptStatusUnknown:
+
+			return true
+		}
+
+	case AttemptStatusAuthorized:
+		switch next {
+		case AttemptStatusCaptured,
+			AttemptStatusFailed,
+			AttemptStatusUnknown:
+
+			return true
+		}
+
+	case AttemptStatusUnknown:
+		switch next {
+		case AttemptStatusRequestingProvider,
+			AttemptStatusRequiresAction,
+			AttemptStatusAuthorized,
+			AttemptStatusCaptured,
+			AttemptStatusFailed,
+			AttemptStatusExpired:
+
+			return true
+		}
+	}
+
+	return false
 }

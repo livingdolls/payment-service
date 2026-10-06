@@ -2,8 +2,10 @@ package postgres
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/livingdolls/payment-service/internal/database"
 	"github.com/livingdolls/payment-service/internal/modules/payment"
 )
@@ -33,6 +35,7 @@ func (a *AttemptRepository) CreateAttempt(ctx context.Context, attempt *payment.
 		VALUES ($1, $2, $3, $4, $5)
 		RETURNING
 			id,
+			version,
 			created_at,
 			updated_at
 	`
@@ -47,6 +50,7 @@ func (a *AttemptRepository) CreateAttempt(ctx context.Context, attempt *payment.
 		attempt.Status,
 	).Scan(
 		&attempt.ID,
+		&attempt.Version,
 		&attempt.CreatedAt,
 		&attempt.UpdatedAt,
 	)
@@ -73,6 +77,7 @@ func (a *AttemptRepository) GetAttemptByID(ctx context.Context, id string) (*pay
 			error_code,
 			error_message,
 			provider_response,
+			version,
 			created_at,
 			updated_at
 		FROM payment_attempts
@@ -97,6 +102,7 @@ func (a *AttemptRepository) GetAttemptByID(ctx context.Context, id string) (*pay
 		&attempt.ErrorCode,
 		&attempt.ErrorMessage,
 		&attempt.ProviderResponse,
+		&attempt.Version,
 		&attempt.CreatedAt,
 		&attempt.UpdatedAt,
 	)
@@ -123,6 +129,7 @@ func (a *AttemptRepository) GetLatestAttempt(ctx context.Context, paymentIntentI
 			error_code,
 			error_message,
 			provider_response,
+			version,
 			created_at,
 			updated_at
 		FROM payment_attempts
@@ -149,6 +156,7 @@ func (a *AttemptRepository) GetLatestAttempt(ctx context.Context, paymentIntentI
 		&attempt.ErrorCode,
 		&attempt.ErrorMessage,
 		&attempt.ProviderResponse,
+		&attempt.Version,
 		&attempt.CreatedAt,
 		&attempt.UpdatedAt,
 	)
@@ -160,4 +168,52 @@ func (a *AttemptRepository) GetLatestAttempt(ctx context.Context, paymentIntentI
 	}
 
 	return attempt, nil
+}
+
+func (a *AttemptRepository) UpdateAttempt(ctx context.Context, attempt *payment.PaymentAttempt, expectedVersion int64) error {
+	const query = `
+		UPDATE payment_attempts
+		SET
+			provider_payment_request_id = $1,
+			provider_payment_id = $2,
+			status = $3,
+			error_code = $4,
+			error_message = $5,
+			provider_response = $6::jsonb,
+
+			version = version + 1,
+			updated_at = NOW()
+		WHERE id = $7
+			AND version = $8
+		RETURNING
+			version,
+			updated_at
+	`
+
+	err := a.db.QueryRow(
+		ctx,
+		query,
+
+		attempt.ProviderPaymentRequestID,
+		attempt.ProviderPaymentID,
+		attempt.Status,
+		attempt.ErrorCode,
+		attempt.ErrorMessage,
+		attempt.ProviderResponse,
+		attempt.ID,
+		expectedVersion,
+	).Scan(
+		&attempt.Version,
+		&attempt.UpdatedAt,
+	)
+
+	if err == nil {
+		return nil
+	}
+
+	if errors.Is(err, pgx.ErrNoRows) {
+		return payment.ErrAttemptConcurrentUpdate
+	}
+
+	return fmt.Errorf("update payment attempt: %w", err)
 }
