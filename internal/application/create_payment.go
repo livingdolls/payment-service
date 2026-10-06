@@ -42,7 +42,8 @@ type CreatePaymentUseCase struct {
 }
 
 type createPaymentResponse struct {
-	ID string `json:"id"`
+	ID        string `json:"id"`
+	AttemptID string `json:"attempt_id"`
 
 	ReferenceID string `json:"reference_id"`
 	OrderID     string `json:"order_id"`
@@ -159,7 +160,7 @@ func (u *CreatePaymentUseCase) Execute(ctx context.Context, command CreatePaymen
 				return err
 			}
 
-			response := newCreatePaymentResponse(paymentIntent)
+			response := newCreatePaymentResponse(paymentIntent, attempt)
 
 			body, err := json.Marshal(response)
 			if err != nil {
@@ -194,9 +195,10 @@ func (u *CreatePaymentUseCase) Execute(ctx context.Context, command CreatePaymen
 	return result, nil
 }
 
-func newCreatePaymentResponse(p *payment.PaymentIntent) createPaymentResponse {
+func newCreatePaymentResponse(p *payment.PaymentIntent, attempt *payment.PaymentAttempt) createPaymentResponse {
 	return createPaymentResponse{
-		ID: p.ID,
+		ID:        p.ID,
+		AttemptID: attempt.ID,
 
 		ReferenceID: p.ReferenceID,
 		OrderID:     p.OrderID,

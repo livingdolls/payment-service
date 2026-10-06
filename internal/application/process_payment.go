@@ -45,7 +45,7 @@ func (u *ProcessPaymentUseCase) Execute(ctx context.Context, command ProcessPaym
 	channelCode := strings.TrimSpace(command.ChannelCode)
 
 	if channelCode == "" {
-		return nil, fmt.Errorf("channel code is required")
+		return nil, ErrChannelCodeRequired
 	}
 
 	country := strings.ToUpper(strings.TrimSpace(command.Country))
@@ -69,7 +69,7 @@ func (u *ProcessPaymentUseCase) Execute(ctx context.Context, command ProcessPaym
 			}
 
 			if attempt.Status != payment.AttemptStatusCreated {
-				return fmt.Errorf("payment attempt cannot be processed from status %s", attempt.Status)
+				return fmt.Errorf("%w: current status %s", ErrPaymentAttemptNotProcessable, attempt.Status)
 			}
 
 			intent, err := paymentRepository.GetByID(ctx, attempt.PaymentIntentID)

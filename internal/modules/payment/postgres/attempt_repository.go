@@ -109,11 +109,15 @@ func (a *AttemptRepository) GetAttemptByID(ctx context.Context, id string) (*pay
 		&attempt.UpdatedAt,
 	)
 
-	if err != nil {
-		return nil, fmt.Errorf("get payment attempt by id: %w", err)
+	if err == nil {
+		return attempt, nil
 	}
 
-	return attempt, nil
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, payment.ErrAttemptNotFound
+	}
+
+	return nil, fmt.Errorf("get payment attempt by id: %w", err)
 }
 
 // GetLatestAttempt implements [payment.AttemptRepository].
