@@ -53,6 +53,12 @@ func (a *PaymentAttempt) TransitionTo(next AttemptStatus) error {
 		return nil
 	}
 
+	if !canTransitionAttempt(a.Status, next) {
+		return ErrInvalidAttemptTransition
+	}
+
+	a.Status = next
+
 	return nil
 }
 
