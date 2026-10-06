@@ -34,6 +34,12 @@ type ProcessPaymentUseCase struct {
 	paymentProvider    provider.PaymentProvider
 }
 
+type PaymentProcessor interface {
+	Execute(ctx context.Context, command ProcessPaymentCommand) (*ProcessPaymentResult, error)
+}
+
+var _ PaymentProcessor = (*ProcessPaymentUseCase)(nil)
+
 func NewProcessPaymentUseCase(transactionManager database.TransactionManager, paymentProvider provider.PaymentProvider) *ProcessPaymentUseCase {
 	return &ProcessPaymentUseCase{
 		transactionManager: transactionManager,

@@ -39,9 +39,7 @@ func main() {
 	transactionManager := database.NewTransactor(db)
 	processPaymentUseCase := application.NewProcessPaymentUseCase(transactionManager, xenditProvider)
 	createPaymentUseCase := application.NewCreatePaymentUseCase(transactionManager)
-	paymentHandler := handler.NewPaymentHandler(createPaymentUseCase)
-
-	_ = processPaymentUseCase
+	paymentHandler := handler.NewPaymentHandler(createPaymentUseCase, processPaymentUseCase)
 
 	router := router.NewRouter(db, paymentHandler)
 
