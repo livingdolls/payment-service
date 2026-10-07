@@ -124,7 +124,18 @@ func canTransitionAttempt(
 		}
 
 	case AttemptStatusUnknown:
-		return next == AttemptStatusRequestingProvider
+		switch next {
+		case AttemptStatusRequestingProvider,
+			AttemptStatusPending,
+			AttemptStatusRequiresAction,
+			AttemptStatusAuthorized,
+			AttemptStatusCaptured,
+			AttemptStatusFailed,
+			AttemptStatusExpired,
+			AttemptStatusCanceled:
+
+			return true
+		}
 	}
 
 	return false
