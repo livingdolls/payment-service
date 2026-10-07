@@ -38,8 +38,11 @@ func NewRouter(db *pgxpool.Pool, paymentHandler *handler.PaymentHandler) *gin.En
 	v1 := router.Group("/v1")
 
 	payments := v1.Group("/payments")
+	attempts := v1.Group("/payment-attempts")
 
 	payments.POST("", paymentHandler.Create)
+
+	attempts.POST("/:attempt_id/process", paymentHandler.Process)
 
 	return router
 }

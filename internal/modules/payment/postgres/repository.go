@@ -112,7 +112,7 @@ func (r *Repository) Update(ctx context.Context, p *payment.PaymentIntent, expec
 		UPDATE payment_intents
 		SET
 			status = $1,
-			caputred_amount = $2,
+			captured_amount = $2,
 			refunded_amount = $3,
 
 			version = version + 1,
