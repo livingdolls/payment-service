@@ -114,6 +114,7 @@ func (a *AttemptRepository) GetAttemptByID(ctx context.Context, id string) (*pay
 	}
 
 	if errors.Is(err, pgx.ErrNoRows) {
+		fmt.Print("DISINI JALAN")
 		return nil, payment.ErrAttemptNotFound
 	}
 

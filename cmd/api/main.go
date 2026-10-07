@@ -17,6 +17,7 @@ import (
 	"github.com/livingdolls/payment-service/internal/modules/webhook"
 	webhookpostgres "github.com/livingdolls/payment-service/internal/modules/webhook/postgres"
 	"github.com/livingdolls/payment-service/internal/provider/xendit"
+	"github.com/livingdolls/payment-service/internal/worker"
 )
 
 func main() {
@@ -42,10 +43,13 @@ func main() {
 	webhookRepository := webhookpostgres.NewRepository(db)
 	processPaymentUseCase := application.NewProcessPaymentUseCase(transactionManager, xenditProvider)
 	createPaymentUseCase := application.NewCreatePaymentUseCase(transactionManager)
+	webhookProcessor := application.NewWebhookProcessor(db, transactionManager)
 	webhookService := webhook.NewService(webhookRepository, cfg.XenditWebhookToken)
 
 	paymentHandler := handler.NewPaymentHandler(createPaymentUseCase, processPaymentUseCase)
 	webhookHandler := handler.NewWebhookHandler(webhookService)
+
+	webhookWorker := worker.NewWebhookWorker(webhookProcessor)
 
 	router := router.NewRouter(db, paymentHandler, webhookHandler)
 
@@ -69,6 +73,8 @@ func main() {
 			os.Exit(1)
 		}
 	}()
+
+	go webhookWorker.Run(ctx)
 
 	quit := make(chan os.Signal, 1)
 
