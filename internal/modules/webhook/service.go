@@ -102,7 +102,7 @@ func (s *Service) verifyXenditToken(token string) bool {
 
 func isSupportedPaymentEvent(event string) bool {
 	switch event {
-	case "payment.caputre", "payment.authorization", "payment.failure":
+	case "payment.capture", "payment.authorization", "payment.failure":
 		return true
 	default:
 		return false
