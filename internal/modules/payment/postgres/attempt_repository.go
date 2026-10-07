@@ -227,3 +227,103 @@ func (a *AttemptRepository) UpdateAttempt(ctx context.Context, attempt *payment.
 
 	return fmt.Errorf("update payment attempt: %w", err)
 }
+
+// FindAttemptForProviderEvent implements [payment.AttemptRepository].
+func (a *AttemptRepository) FindAttemptForProviderEvent(ctx context.Context, provider payment.Provider, providerPaymentID string, providerPaymetnRequestID string, referenceID string) (*payment.PaymentAttempt, error) {
+	const query = `
+		SELECT
+			a.id,
+			a.payment_intent_id,
+			a.attempt_number,
+			a.provider,
+			a.provider_idempotency_key,
+			a.provider_payment_request_id,
+			a.provider_payment_id,
+			a.status,
+			a.error_code,
+			a.error_message,
+			a.provider_request,
+			a.provider_response,
+			a.version,
+			a.created_at,
+			a.updated_at
+		
+		FROM payment_attempts a
+		JOIN payment_intents p
+			ON p.id = a.payment_intent_id
+
+		WHERE a.provider = $1
+			AND (
+					(
+						$2 <> ''
+						AND a.provider_payment_id = $2
+					)
+
+					OR
+
+					(
+						$3 <> ''
+						AND a.provider_payment_request_id = $3
+					)
+
+					OR
+
+					(
+						$4 <> ''
+						AND p.reference_id = $4
+					)
+			)
+
+		ORDER BY
+			CASE 
+				WHEN a.provider_payment_id = $2
+					THEN 1
+
+				WHEN a.provider_payment_request_id = $3
+					THEN 2
+
+				ELSE 3
+			END,
+
+			a.attempt_number DESC
+
+		LIMIT 1
+	`
+
+	attempt := &payment.PaymentAttempt{}
+
+	err := a.db.QueryRow(
+		ctx,
+		query,
+		provider,
+		providerPaymentID,
+		providerPaymetnRequestID,
+		referenceID,
+	).Scan(
+		&attempt.ID,
+		&attempt.PaymentIntentID,
+		&attempt.AttemptNumber,
+		&attempt.Provider,
+		&attempt.ProviderIdempotencyKey,
+		&attempt.ProviderPaymentRequestID,
+		&attempt.ProviderPaymentID,
+		&attempt.Status,
+		&attempt.ErrorCode,
+		&attempt.ErrorMessage,
+		&attempt.ProviderRequest,
+		&attempt.ProviderResponse,
+		&attempt.Version,
+		&attempt.CreatedAt,
+		&attempt.UpdatedAt,
+	)
+
+	if err == nil {
+		return attempt, nil
+	}
+
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, payment.ErrAttemptNotFound
+	}
+
+	return nil, fmt.Errorf("find payment attempt for provider event: %w", err)
+}
