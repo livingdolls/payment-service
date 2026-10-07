@@ -10,7 +10,7 @@ import (
 	"github.com/livingdolls/payment-service/internal/http/handler"
 )
 
-func NewRouter(db *pgxpool.Pool, paymentHandler *handler.PaymentHandler) *gin.Engine {
+func NewRouter(db *pgxpool.Pool, paymentHandler *handler.PaymentHandler, webhookHandler *handler.WebhookHandler) *gin.Engine {
 	router := gin.New()
 
 	router.Use(gin.Logger())
@@ -36,13 +36,16 @@ func NewRouter(db *pgxpool.Pool, paymentHandler *handler.PaymentHandler) *gin.En
 	})
 
 	v1 := router.Group("/v1")
+	webhooks := router.Group("/webhooks")
 
 	payments := v1.Group("/payments")
 	attempts := v1.Group("/payment-attempts")
+	xenditWebhooks := webhooks.Group("/xendit")
 
 	payments.POST("", paymentHandler.Create)
 
 	attempts.POST("/:attempt_id/process", paymentHandler.Process)
+	xenditWebhooks.POST("/payments", webhookHandler.XenditPayment)
 
 	return router
 }

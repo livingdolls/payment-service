@@ -10,8 +10,9 @@ type Config struct {
 	HTTPPort    string
 	DatabaseURL string
 
-	XenditSecretKey string
-	XenditBaseURL   string
+	XenditSecretKey    string
+	XenditBaseURL      string
+	XenditWebhookToken string
 }
 
 func LoadConfig() (*Config, error) {
@@ -20,8 +21,9 @@ func LoadConfig() (*Config, error) {
 		HTTPPort:    getEnv("HTTP_PORT", "8080"),
 		DatabaseURL: os.Getenv("DATABASE_URL"),
 
-		XenditSecretKey: os.Getenv("XENDIT_SECRET_KEY"),
-		XenditBaseURL:   getEnv("XENDIT_BASE_URL", "https://api.xendit.co"),
+		XenditSecretKey:    os.Getenv("XENDIT_SECRET_KEY"),
+		XenditBaseURL:      getEnv("XENDIT_BASE_URL", "https://api.xendit.co"),
+		XenditWebhookToken: os.Getenv("XENDIT_WEBHOOK_TOKEN"),
 	}
 
 	if cfg.DatabaseURL == "" {
@@ -30,6 +32,10 @@ func LoadConfig() (*Config, error) {
 
 	if cfg.XenditSecretKey == "" {
 		return nil, fmt.Errorf("XENDIT_SECRET_KEY is required")
+	}
+
+	if cfg.XenditWebhookToken == "" {
+		return nil, fmt.Errorf("XENDIT_WEBHOOK_TOKEN is required")
 	}
 
 	return cfg, nil

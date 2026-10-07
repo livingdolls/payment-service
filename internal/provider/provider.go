@@ -16,9 +16,9 @@ const (
 )
 
 type Action struct {
-	Type       string
-	Descriptor string
-	Value      string
+	Type       string `json:"type"`
+	Descriptor string `json:"descriptor"`
+	Value      string `json:"value"`
 }
 
 type CreatePaymentInput struct {
