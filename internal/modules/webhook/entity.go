@@ -31,6 +31,7 @@ type Event struct {
 
 	ErrorMessage *string
 
-	ReceivedAt  time.Time
-	ProcessedAt *time.Time
+	ReceivedAt          time.Time
+	ProcessingStartedAt *time.Time
+	ProcessedAt         *time.Time
 }
