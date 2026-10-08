@@ -10,11 +10,12 @@ const (
 )
 
 type Error struct {
-	Kind       ErrorKind
-	StatusCode int
-	Code       string
-	Message    string
-	Err        error
+	Kind        ErrorKind
+	StatusCode  int
+	Code        string
+	Message     string
+	Err         error
+	RawResponse []byte
 }
 
 func (e *Error) Error() string {
