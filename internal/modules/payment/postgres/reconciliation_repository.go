@@ -15,6 +15,13 @@ type ReconciliationRepository struct {
 	db database.DBTX
 }
 
+type ReconciliationJob struct {
+	AttemptID string
+
+	ReconcileAttempts int
+	ReconcileFailures int
+}
+
 func NewReconciliationRepository(db database.DBTX) *ReconciliationRepository {
 	return &ReconciliationRepository{
 		db: db,

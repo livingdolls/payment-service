@@ -64,3 +64,7 @@ type PaymentProvider interface {
 type PaymentStatusReader interface {
 	GetPaymentRequest(ctx context.Context, paymentRequestID string) (*PaymentRequestSnapshot, error)
 }
+
+type TransactionReferenceLookup interface {
+	FindPaymentRequestIDByReference(ctx context.Context, referenceID string, currency string, amount int64) (string, bool, error)
+}
