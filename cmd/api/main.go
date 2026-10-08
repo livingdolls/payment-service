@@ -45,11 +45,13 @@ func main() {
 	createPaymentUseCase := application.NewCreatePaymentUseCase(transactionManager)
 	webhookProcessor := application.NewWebhookProcessor(db, transactionManager)
 	webhookService := webhook.NewService(webhookRepository, cfg.XenditWebhookToken)
+	reconciliationProcessor := application.NewReconciliationProcessor(db, xenditProvider, processPaymentUseCase)
 
 	paymentHandler := handler.NewPaymentHandler(createPaymentUseCase, processPaymentUseCase)
 	webhookHandler := handler.NewWebhookHandler(webhookService)
 
 	webhookWorker := worker.NewWebhookWorker(webhookProcessor)
+	reconciliationWorker := worker.NewReconciliationWorker(reconciliationProcessor)
 
 	router := router.NewRouter(db, paymentHandler, webhookHandler)
 
@@ -75,6 +77,7 @@ func main() {
 	}()
 
 	go webhookWorker.Run(ctx)
+	go reconciliationWorker.Run(ctx)
 
 	quit := make(chan os.Signal, 1)
 
