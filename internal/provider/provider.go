@@ -43,6 +43,24 @@ type CreatePaymentResult struct {
 	RawResponse      []byte
 }
 
+type PaymentRequestSnapshot struct {
+	PaymentRequestID string
+	ReferenceID      string
+
+	Amount   int64
+	Currency string
+
+	PaymentID *string
+	Status    PaymentStatus
+
+	Actions     []Action
+	RawResponse []byte
+}
+
 type PaymentProvider interface {
 	CreatePayment(ctx context.Context, input CreatePaymentInput) (*CreatePaymentResult, error)
+}
+
+type PaymentStatusReader interface {
+	GetPaymentRequest(ctx context.Context, paymentRequestID string) (*PaymentRequestSnapshot, error)
 }
