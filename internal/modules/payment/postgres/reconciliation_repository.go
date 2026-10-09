@@ -43,9 +43,11 @@ func (r *ReconciliationRepository) ClaimNext(ctx context.Context, minAge time.Du
 					'REQUIRES_ACTION',
 					'AUTHORIZED'
 				)
-				AND updated_at <= NOW()
-					- ($1::integer * INTERVAL '1 second')
+				AND (
+					updated_at <= NOW()
+						- ($1::integer * INTERVAL '1 second')
 					OR reconcile_force = TRUE
+				)
 				AND (
 					next_reconcile_at IS NULL
 					OR next_reconcile_at <= NOW()

@@ -169,7 +169,7 @@ func (r *Repository) MarkForRetry(ctx context.Context, id string, message string
 		UPDATE webhook_events
 		SET
 			status = CASE
-				WHEN processing_attempts > $1
+				WHEN processing_attempts >= $1
 					THEN $2
 				ELSE $3
 			END,

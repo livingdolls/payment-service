@@ -79,11 +79,10 @@ func (p *ReconciliationProcessor) ProcessNext(ctx context.Context) (bool, error)
 		job,
 		reconcileCooldown,
 	); err != nil {
-		return true, nil
+		return true, err
 	}
 
 	return true, nil
-
 }
 
 func (p *ReconciliationProcessor) reconcileAttempt(ctx context.Context, attemptID string) error {
@@ -215,10 +214,13 @@ func (p *ReconciliationProcessor) reconcileAttempt(ctx context.Context, attemptI
 
 func isTerminalAttempt(status payment.AttemptStatus) bool {
 	switch status {
-	case payment.AttemptStatusCaptured, payment.AttemptStatusFailed, payment.AttemptStatusExpired, payment.AttemptStatusCanceled:
+	case payment.AttemptStatusCaptured,
+		payment.AttemptStatusFailed,
+		payment.AttemptStatusExpired,
+		payment.AttemptStatusCanceled:
 		return true
 
 	default:
-		return true
+		return false
 	}
 }

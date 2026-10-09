@@ -142,6 +142,10 @@ func (u *CreatePaymentUseCase) Execute(ctx context.Context, command CreatePaymen
 				},
 			)
 
+			if err != nil {
+				return err
+			}
+
 			attemptRepository := paymentpostgres.NewAttemptRepository(db)
 
 			attempt := &payment.PaymentAttempt{
@@ -154,10 +158,6 @@ func (u *CreatePaymentUseCase) Execute(ctx context.Context, command CreatePaymen
 
 			if err := attemptRepository.CreateAttempt(ctx, attempt); err != nil {
 				return fmt.Errorf("create payment attempt: %w", err)
-			}
-
-			if err != nil {
-				return err
 			}
 
 			response := newCreatePaymentResponse(paymentIntent, attempt)

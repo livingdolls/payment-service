@@ -120,7 +120,7 @@ func (r *ReviewRepository) Requeue(ctx context.Context, attemptID string, actor 
 				SELECT
 					status,
 					reconcile_state,
-					reconcile_failures,
+					reconcile_failures
 				FROM payment_attempts
 				WHERE id = $1
 				FOR UPDATE			
@@ -200,7 +200,7 @@ func (r *ReviewRepository) Requeue(ctx context.Context, attemptID string, actor 
 					new_state,
 					previous_failures
 				)
-				VALUES ($1, $2, $3, $5, $5, $6, $7)
+				VALUES ($1, $2, $3, $4, $5, $6, $7)
 				RETURNING
 					id,
 					created_at

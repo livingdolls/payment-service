@@ -15,6 +15,7 @@ type PaymentWebhookData struct {
 	PaymentRequestID string                  `json:"payment_request_id"`
 	ReferenceID      string                  `json:"reference_id"`
 	Status           string                  `json:"status"`
+	Currency         string                  `json:"currency"`
 	RequestAmount    int64                   `json:"request_amount"`
 	FailureCode      string                  `json:"failure_code,omitempty"`
 	Captures         []PaymentWebhookCapture `json:"captures,omitempty"`

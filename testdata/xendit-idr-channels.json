@@ -1,0 +1,514 @@
+{
+  "schema_version": 1,
+  "reviewed_at": "2026-10-09",
+  "country": "ID",
+  "currency": "IDR",
+  "api_version": "2024-11-11",
+  "channels": [
+    {
+      "channel_code": "BCA_VIRTUAL_ACCOUNT",
+      "eligible": true,
+      "completion_mode": "simulate",
+      "amount": 50000,
+      "properties": {
+        "display_name": "Payment Sandbox"
+      },
+      "reason": "",
+      "source_urls": [
+        "https://docs.xendit.co/docs/available-payment-methods",
+        "https://doc-widget.xendit.co/reference-files/channel-properties.csv",
+        "https://doc-widget.xendit.co/channel-table/",
+        "https://docs.xendit.co/apidocs/simulate-payment-test-mode"
+      ]
+    },
+    {
+      "channel_code": "BNC_VIRTUAL_ACCOUNT",
+      "eligible": true,
+      "completion_mode": "simulate",
+      "amount": 50000,
+      "properties": {
+        "display_name": "Payment Sandbox"
+      },
+      "reason": "",
+      "source_urls": [
+        "https://docs.xendit.co/docs/available-payment-methods",
+        "https://doc-widget.xendit.co/reference-files/channel-properties.csv",
+        "https://doc-widget.xendit.co/channel-table/",
+        "https://docs.xendit.co/apidocs/simulate-payment-test-mode"
+      ]
+    },
+    {
+      "channel_code": "BNI_VIRTUAL_ACCOUNT",
+      "eligible": true,
+      "completion_mode": "simulate",
+      "amount": 50000,
+      "properties": {
+        "display_name": "Payment Sandbox"
+      },
+      "reason": "",
+      "source_urls": [
+        "https://docs.xendit.co/docs/available-payment-methods",
+        "https://doc-widget.xendit.co/reference-files/channel-properties.csv",
+        "https://doc-widget.xendit.co/channel-table/",
+        "https://docs.xendit.co/apidocs/simulate-payment-test-mode"
+      ]
+    },
+    {
+      "channel_code": "BRI_VIRTUAL_ACCOUNT",
+      "eligible": true,
+      "completion_mode": "simulate",
+      "amount": 50000,
+      "properties": {
+        "display_name": "Payment Sandbox"
+      },
+      "reason": "",
+      "source_urls": [
+        "https://docs.xendit.co/docs/available-payment-methods",
+        "https://doc-widget.xendit.co/reference-files/channel-properties.csv",
+        "https://doc-widget.xendit.co/channel-table/",
+        "https://docs.xendit.co/apidocs/simulate-payment-test-mode"
+      ]
+    },
+    {
+      "channel_code": "BSI_VIRTUAL_ACCOUNT",
+      "eligible": true,
+      "completion_mode": "simulate",
+      "amount": 50000,
+      "properties": {
+        "display_name": "Payment Sandbox"
+      },
+      "reason": "",
+      "source_urls": [
+        "https://docs.xendit.co/docs/available-payment-methods",
+        "https://doc-widget.xendit.co/reference-files/channel-properties.csv",
+        "https://doc-widget.xendit.co/channel-table/",
+        "https://docs.xendit.co/apidocs/simulate-payment-test-mode"
+      ]
+    },
+    {
+      "channel_code": "BSS_VIRTUAL_ACCOUNT",
+      "eligible": true,
+      "completion_mode": "simulate",
+      "amount": 50000,
+      "properties": {
+        "display_name": "Payment Sandbox"
+      },
+      "reason": "",
+      "source_urls": [
+        "https://docs.xendit.co/docs/available-payment-methods",
+        "https://doc-widget.xendit.co/reference-files/channel-properties.csv",
+        "https://doc-widget.xendit.co/channel-table/",
+        "https://docs.xendit.co/apidocs/simulate-payment-test-mode"
+      ]
+    },
+    {
+      "channel_code": "CIMB_VIRTUAL_ACCOUNT",
+      "eligible": true,
+      "completion_mode": "simulate",
+      "amount": 50000,
+      "properties": {
+        "display_name": "Payment Sandbox"
+      },
+      "reason": "",
+      "source_urls": [
+        "https://docs.xendit.co/docs/available-payment-methods",
+        "https://doc-widget.xendit.co/reference-files/channel-properties.csv",
+        "https://doc-widget.xendit.co/channel-table/",
+        "https://docs.xendit.co/apidocs/simulate-payment-test-mode"
+      ]
+    },
+    {
+      "channel_code": "INA_VIRTUAL_ACCOUNT",
+      "eligible": true,
+      "completion_mode": "simulate",
+      "amount": 50000,
+      "properties": {
+        "display_name": "Payment Sandbox"
+      },
+      "reason": "",
+      "source_urls": [
+        "https://docs.xendit.co/docs/available-payment-methods",
+        "https://doc-widget.xendit.co/reference-files/channel-properties.csv",
+        "https://doc-widget.xendit.co/channel-table/",
+        "https://docs.xendit.co/apidocs/simulate-payment-test-mode"
+      ]
+    },
+    {
+      "channel_code": "MANDIRI_VIRTUAL_ACCOUNT",
+      "eligible": true,
+      "completion_mode": "simulate",
+      "amount": 50000,
+      "properties": {
+        "display_name": "Payment Sandbox"
+      },
+      "reason": "",
+      "source_urls": [
+        "https://docs.xendit.co/docs/available-payment-methods",
+        "https://doc-widget.xendit.co/reference-files/channel-properties.csv",
+        "https://doc-widget.xendit.co/channel-table/",
+        "https://docs.xendit.co/apidocs/simulate-payment-test-mode"
+      ]
+    },
+    {
+      "channel_code": "MUAMALAT_VIRTUAL_ACCOUNT",
+      "eligible": true,
+      "completion_mode": "simulate",
+      "amount": 50000,
+      "properties": {
+        "display_name": "Payment Sandbox"
+      },
+      "reason": "",
+      "source_urls": [
+        "https://docs.xendit.co/docs/available-payment-methods",
+        "https://doc-widget.xendit.co/reference-files/channel-properties.csv",
+        "https://doc-widget.xendit.co/channel-table/",
+        "https://docs.xendit.co/apidocs/simulate-payment-test-mode"
+      ]
+    },
+    {
+      "channel_code": "PERMATA_VIRTUAL_ACCOUNT",
+      "eligible": true,
+      "completion_mode": "simulate",
+      "amount": 50000,
+      "properties": {
+        "display_name": "Payment Sandbox"
+      },
+      "reason": "",
+      "source_urls": [
+        "https://docs.xendit.co/docs/available-payment-methods",
+        "https://doc-widget.xendit.co/reference-files/channel-properties.csv",
+        "https://doc-widget.xendit.co/channel-table/",
+        "https://docs.xendit.co/apidocs/simulate-payment-test-mode"
+      ]
+    },
+    {
+      "channel_code": "ASTRAPAY",
+      "eligible": true,
+      "completion_mode": "actions",
+      "amount": 50000,
+      "properties": {
+        "success_return_url": "https://xendit.co/success",
+        "failure_return_url": "https://xendit.co/failure"
+      },
+      "reason": "",
+      "source_urls": [
+        "https://docs.xendit.co/docs/available-payment-methods",
+        "https://doc-widget.xendit.co/reference-files/channel-properties.csv",
+        "https://doc-widget.xendit.co/channel-table/"
+      ]
+    },
+    {
+      "channel_code": "DANA",
+      "eligible": true,
+      "completion_mode": "actions",
+      "amount": 50000,
+      "properties": {
+        "success_return_url": "https://xendit.co/success"
+      },
+      "reason": "",
+      "source_urls": [
+        "https://docs.xendit.co/docs/available-payment-methods",
+        "https://doc-widget.xendit.co/reference-files/channel-properties.csv",
+        "https://doc-widget.xendit.co/channel-table/"
+      ]
+    },
+    {
+      "channel_code": "LINKAJA",
+      "eligible": true,
+      "completion_mode": "actions",
+      "amount": 50000,
+      "properties": {
+        "success_return_url": "https://xendit.co/success"
+      },
+      "reason": "",
+      "source_urls": [
+        "https://docs.xendit.co/docs/available-payment-methods",
+        "https://doc-widget.xendit.co/reference-files/channel-properties.csv",
+        "https://doc-widget.xendit.co/channel-table/"
+      ]
+    },
+    {
+      "channel_code": "SHOPEEPAY",
+      "eligible": true,
+      "completion_mode": "actions",
+      "amount": 50000,
+      "properties": {
+        "success_return_url": "https://xendit.co/success"
+      },
+      "reason": "",
+      "source_urls": [
+        "https://docs.xendit.co/docs/available-payment-methods",
+        "https://doc-widget.xendit.co/reference-files/channel-properties.csv",
+        "https://doc-widget.xendit.co/channel-table/"
+      ]
+    },
+    {
+      "channel_code": "GOPAY",
+      "eligible": true,
+      "completion_mode": "actions",
+      "amount": 50000,
+      "properties": {
+        "success_return_url": "https://xendit.co/success",
+        "failure_return_url": "https://xendit.co/failure",
+        "cancel_return_url": "https://xendit.co/cancel"
+      },
+      "reason": "",
+      "source_urls": [
+        "https://docs.xendit.co/docs/available-payment-methods",
+        "https://doc-widget.xendit.co/reference-files/channel-properties.csv",
+        "https://doc-widget.xendit.co/channel-table/"
+      ]
+    },
+    {
+      "channel_code": "OVO",
+      "eligible": true,
+      "completion_mode": "actions",
+      "amount": 50000,
+      "properties": {
+        "account_mobile_number": "+628123456789"
+      },
+      "reason": "",
+      "source_urls": [
+        "https://docs.xendit.co/docs/available-payment-methods",
+        "https://doc-widget.xendit.co/reference-files/channel-properties.csv",
+        "https://doc-widget.xendit.co/channel-table/"
+      ]
+    },
+    {
+      "channel_code": "JENIUSPAY",
+      "eligible": true,
+      "completion_mode": "actions",
+      "amount": 50000,
+      "properties": {
+        "cashtag": "$paymenttest"
+      },
+      "reason": "",
+      "source_urls": [
+        "https://docs.xendit.co/docs/available-payment-methods",
+        "https://doc-widget.xendit.co/reference-files/channel-properties.csv",
+        "https://doc-widget.xendit.co/channel-table/",
+        "https://docs.xendit.co/docs/jeniuspay",
+        "https://developers.xendit.co/api-reference/?javascript=#ewallets"
+      ]
+    },
+    {
+      "channel_code": "QRIS",
+      "eligible": true,
+      "completion_mode": "simulate",
+      "amount": 50000,
+      "properties": {},
+      "reason": "",
+      "source_urls": [
+        "https://docs.xendit.co/docs/available-payment-methods",
+        "https://doc-widget.xendit.co/reference-files/channel-properties.csv",
+        "https://doc-widget.xendit.co/channel-table/",
+        "https://docs.xendit.co/apidocs/simulate-payment-test-mode"
+      ]
+    },
+    {
+      "channel_code": "ALFAMART",
+      "eligible": true,
+      "completion_mode": "simulate",
+      "amount": 50000,
+      "properties": {
+        "payer_name": "Payment Sandbox"
+      },
+      "reason": "",
+      "source_urls": [
+        "https://docs.xendit.co/docs/available-payment-methods",
+        "https://doc-widget.xendit.co/reference-files/channel-properties.csv",
+        "https://doc-widget.xendit.co/channel-table/",
+        "https://docs.xendit.co/apidocs/simulate-payment-test-mode"
+      ]
+    },
+    {
+      "channel_code": "INDOMARET",
+      "eligible": true,
+      "completion_mode": "simulate",
+      "amount": 50000,
+      "properties": {
+        "payer_name": "Payment Sandbox"
+      },
+      "reason": "",
+      "source_urls": [
+        "https://docs.xendit.co/docs/available-payment-methods",
+        "https://doc-widget.xendit.co/reference-files/channel-properties.csv",
+        "https://doc-widget.xendit.co/channel-table/",
+        "https://docs.xendit.co/apidocs/simulate-payment-test-mode"
+      ]
+    },
+    {
+      "channel_code": "CARDS",
+      "eligible": true,
+      "completion_mode": "actions",
+      "amount": 50000,
+      "properties": {
+        "mid_label": "CTV_TEST",
+        "card_details": {
+          "card_number": "4000000000001091",
+          "cvn": "123",
+          "expiry_year": "2029",
+          "expiry_month": "12",
+          "cardholder_first_name": "Payment",
+          "cardholder_last_name": "Sandbox",
+          "cardholder_email": "payment-test@example.com",
+          "cardholder_phone_number": "+628123456789"
+        },
+        "skip_three_ds": false,
+        "success_return_url": "https://xendit.co/success",
+        "failure_return_url": "https://xendit.co/failure"
+      },
+      "reason": "",
+      "source_urls": [
+        "https://docs.xendit.co/docs/available-payment-methods",
+        "https://doc-widget.xendit.co/reference-files/channel-properties.csv",
+        "https://doc-widget.xendit.co/channel-table/",
+        "https://docs.xendit.co/apidocs/create-payment-request",
+        "https://docs.xendit.co/docs/pay-with-authentication"
+      ]
+    },
+    {
+      "channel_code": "BJB_VIRTUAL_ACCOUNT",
+      "eligible": false,
+      "completion_mode": "blocked",
+      "amount": 50000,
+      "properties": {},
+      "reason": "Listed in the IDR catalog, but its v3 PAY profile is marked Ignore in the official channel-properties CSV; runnable support is unconfirmed.",
+      "source_urls": [
+        "https://docs.xendit.co/docs/available-payment-methods",
+        "https://doc-widget.xendit.co/reference-files/channel-properties.csv",
+        "https://doc-widget.xendit.co/channel-table/"
+      ]
+    },
+    {
+      "channel_code": "AKULAKU",
+      "eligible": false,
+      "completion_mode": "blocked",
+      "amount": 50000,
+      "properties": {},
+      "reason": "Listed in the IDR catalog, but its v3 PAY profile is marked Ignore in the official channel-properties CSV; runnable support is unconfirmed.",
+      "source_urls": [
+        "https://docs.xendit.co/docs/available-payment-methods",
+        "https://doc-widget.xendit.co/reference-files/channel-properties.csv",
+        "https://doc-widget.xendit.co/channel-table/"
+      ]
+    },
+    {
+      "channel_code": "ATOME",
+      "eligible": false,
+      "completion_mode": "blocked",
+      "amount": 50000,
+      "properties": {},
+      "reason": "Listed in the IDR catalog, but its v3 PAY profile is marked Ignore in the official channel-properties CSV; runnable support is unconfirmed.",
+      "source_urls": [
+        "https://docs.xendit.co/docs/available-payment-methods",
+        "https://doc-widget.xendit.co/reference-files/channel-properties.csv",
+        "https://doc-widget.xendit.co/channel-table/"
+      ]
+    },
+    {
+      "channel_code": "INDODANA",
+      "eligible": false,
+      "completion_mode": "blocked",
+      "amount": 50000,
+      "properties": {},
+      "reason": "Listed in the IDR catalog, but its v3 PAY profile is marked Ignore in the official channel-properties CSV; runnable support is unconfirmed.",
+      "source_urls": [
+        "https://docs.xendit.co/docs/available-payment-methods",
+        "https://doc-widget.xendit.co/reference-files/channel-properties.csv",
+        "https://doc-widget.xendit.co/channel-table/"
+      ]
+    },
+    {
+      "channel_code": "KREDIVO",
+      "eligible": false,
+      "completion_mode": "blocked",
+      "amount": 50000,
+      "properties": {},
+      "reason": "Listed in the IDR catalog, but its v3 PAY profile is marked Ignore in the official channel-properties CSV; runnable support is unconfirmed.",
+      "source_urls": [
+        "https://docs.xendit.co/docs/available-payment-methods",
+        "https://doc-widget.xendit.co/reference-files/channel-properties.csv",
+        "https://doc-widget.xendit.co/channel-table/"
+      ]
+    },
+    {
+      "channel_code": "NEXCASH",
+      "eligible": false,
+      "completion_mode": "blocked",
+      "amount": 50000,
+      "properties": {},
+      "reason": "Listed in the IDR catalog, but its v3 PAY profile is marked Ignore in the official channel-properties CSV; runnable support is unconfirmed.",
+      "source_urls": [
+        "https://docs.xendit.co/docs/available-payment-methods",
+        "https://doc-widget.xendit.co/reference-files/channel-properties.csv",
+        "https://doc-widget.xendit.co/channel-table/"
+      ]
+    },
+    {
+      "channel_code": "CIMB_DIRECT_DEBIT",
+      "eligible": false,
+      "completion_mode": "blocked",
+      "amount": 50000,
+      "properties": {},
+      "reason": "Listed in the IDR catalog, but its v3 PAY profile is marked Ignore in the official channel-properties CSV; runnable support is unconfirmed.",
+      "source_urls": [
+        "https://docs.xendit.co/docs/available-payment-methods",
+        "https://doc-widget.xendit.co/reference-files/channel-properties.csv",
+        "https://doc-widget.xendit.co/channel-table/"
+      ]
+    },
+    {
+      "channel_code": "MANDIRI_DIRECT_DEBIT",
+      "eligible": false,
+      "completion_mode": "blocked",
+      "amount": 50000,
+      "properties": {},
+      "reason": "Listed in the IDR catalog, but its v3 PAY profile is marked Ignore in the official channel-properties CSV; runnable support is unconfirmed.",
+      "source_urls": [
+        "https://docs.xendit.co/docs/available-payment-methods",
+        "https://doc-widget.xendit.co/reference-files/channel-properties.csv",
+        "https://doc-widget.xendit.co/channel-table/"
+      ]
+    },
+    {
+      "channel_code": "HANA_VIRTUAL_ACCOUNT",
+      "eligible": false,
+      "completion_mode": "blocked",
+      "amount": 50000,
+      "properties": {},
+      "reason": "Listed in the IDR catalog, but no v3 channel-properties profile was found; required PAY properties and sandbox support are unconfirmed.",
+      "source_urls": [
+        "https://docs.xendit.co/docs/available-payment-methods",
+        "https://doc-widget.xendit.co/reference-files/channel-properties.csv",
+        "https://doc-widget.xendit.co/channel-table/"
+      ]
+    },
+    {
+      "channel_code": "BRI_DIRECT_DEBIT",
+      "eligible": false,
+      "completion_mode": "blocked",
+      "amount": 50000,
+      "properties": {},
+      "reason": "Requires a saved-payment-token/customer flow that this service does not expose; its current process endpoint only creates a PAY request by channel_code.",
+      "source_urls": [
+        "https://docs.xendit.co/docs/available-payment-methods",
+        "https://doc-widget.xendit.co/reference-files/channel-properties.csv",
+        "https://docs.xendit.co/apidocs/create-payment-request"
+      ]
+    },
+    {
+      "channel_code": "GOPAY_RECURRING",
+      "eligible": false,
+      "completion_mode": "blocked",
+      "amount": 50000,
+      "properties": {},
+      "reason": "Requires a saved-payment-token/customer flow that this service does not expose; its current process endpoint only creates a PAY request by channel_code.",
+      "source_urls": [
+        "https://docs.xendit.co/docs/available-payment-methods",
+        "https://doc-widget.xendit.co/reference-files/channel-properties.csv",
+        "https://docs.xendit.co/apidocs/create-payment-request"
+      ]
+    }
+  ]
+}

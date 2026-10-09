@@ -12,6 +12,7 @@ import (
 	paymentpostgres "github.com/livingdolls/payment-service/internal/modules/payment/postgres"
 	"github.com/livingdolls/payment-service/internal/modules/webhook"
 	webhookpostgres "github.com/livingdolls/payment-service/internal/modules/webhook/postgres"
+	"github.com/livingdolls/payment-service/internal/provider"
 	xenditprovider "github.com/livingdolls/payment-service/internal/provider/xendit"
 )
 
@@ -42,7 +43,7 @@ func (p *WebhookProcessor) ProcessNext(ctx context.Context) (bool, error) {
 	}
 
 	if err != nil {
-		return false, nil
+		return false, fmt.Errorf("claim webhook: %w", err)
 	}
 
 	if err := p.processEvent(ctx, event); err != nil {
@@ -95,21 +96,16 @@ func (p *WebhookProcessor) processEvent(ctx context.Context, event *webhook.Even
 				return err
 			}
 
+			if err := validateXenditPaymentEvent(attempt, intent, payload); err != nil {
+				return err
+			}
+
 			if err := applyXenditPaymentEvent(attempt, intent, payload); err != nil {
 				return err
 			}
 
-			if payload.Data.PaymentID != "" {
-				paymentID := payload.Data.PaymentID
-				attempt.ProviderPaymentID = &paymentID
-			}
-
-			if payload.Data.PaymentRequestID != "" {
-				paymentRequestID := payload.Data.PaymentRequestID
-				attempt.ProviderPaymentRequestID = &paymentRequestID
-			}
-
 			expectedAttemptVersion := attempt.Version
+			expectedPaymentVersion := intent.Version
 
 			if err := attemptRepository.UpdateAttempt(ctx, attempt, expectedAttemptVersion); err != nil {
 				return err
@@ -118,7 +114,7 @@ func (p *WebhookProcessor) processEvent(ctx context.Context, event *webhook.Even
 			if err := paymentRepository.Update(
 				ctx,
 				intent,
-				expectedAttemptVersion,
+				expectedPaymentVersion,
 			); err != nil {
 				return err
 			}
@@ -135,7 +131,48 @@ func (p *WebhookProcessor) processEvent(ctx context.Context, event *webhook.Even
 	)
 }
 
-func applyXenditPaymentEvent(attempt *payment.PaymentAttempt, intent *payment.PaymentIntent, event xenditprovider.PaymentWebhook) error {
+func validateXenditPaymentEvent(
+	attempt *payment.PaymentAttempt,
+	intent *payment.PaymentIntent,
+	event xenditprovider.PaymentWebhook,
+) error {
+	if event.Data.ReferenceID != "" && event.Data.ReferenceID != intent.ReferenceID {
+		return fmt.Errorf("webhook reference id mismatch")
+	}
+
+	if event.Data.Currency != "" && event.Data.Currency != intent.Currency {
+		return fmt.Errorf("webhook currency mismatch")
+	}
+
+	if event.Data.RequestAmount != intent.Amount {
+		return fmt.Errorf("webhook request amount mismatch")
+	}
+
+	expectedStatus := ""
+	switch event.Event {
+	case "payment.capture":
+		expectedStatus = "SUCCEEDED"
+	case "payment.authorization":
+		expectedStatus = "AUTHORIZED"
+	case "payment.failure":
+		expectedStatus = "FAILED"
+	}
+	if event.Data.Status != "" && event.Data.Status != expectedStatus {
+		return fmt.Errorf("webhook status does not match event")
+	}
+
+	paymentID := event.Data.PaymentID
+	return bindProviderResultIdentifiers(attempt, &provider.CreatePaymentResult{
+		PaymentRequestID: event.Data.PaymentRequestID,
+		PaymentID:        &paymentID,
+	})
+}
+
+func applyXenditPaymentEvent(
+	attempt *payment.PaymentAttempt,
+	intent *payment.PaymentIntent,
+	event xenditprovider.PaymentWebhook,
+) error {
 	switch event.Event {
 	case "payment.authorization":
 		return applyAuthorization(attempt, intent)
@@ -175,7 +212,34 @@ func applyAuthorization(attempt *payment.PaymentAttempt, intent *payment.Payment
 	return nil
 }
 
-func applyCapture(attempt *payment.PaymentAttempt, intent *payment.PaymentIntent, event xenditprovider.PaymentWebhook) error {
+func applyCapture(
+	attempt *payment.PaymentAttempt,
+	intent *payment.PaymentIntent,
+	event xenditprovider.PaymentWebhook,
+) error {
+	capturedAmount := event.Data.RequestAmount
+	if len(event.Data.Captures) > 0 {
+		capturedAmount = 0
+		for _, capture := range event.Data.Captures {
+			if capture.CaptureAmount <= 0 || capture.CaptureAmount > intent.Amount-capturedAmount {
+				return fmt.Errorf("invalid webhook capture amount")
+			}
+			capturedAmount += capture.CaptureAmount
+		}
+	}
+
+	if capturedAmount <= 0 || capturedAmount > intent.Amount {
+		return fmt.Errorf("invalid webhook captured amount")
+	}
+
+	if intent.CaptureMethod == payment.CaptureMethodAutomatic && capturedAmount != intent.Amount {
+		return fmt.Errorf("automatic payment requires full capture amount")
+	}
+
+	if attempt.Status == payment.AttemptStatusCaptured && intent.Status == payment.StatusCaptured {
+		return nil
+	}
+
 	if attempt.Status != payment.AttemptStatusCaptured {
 		if err := attempt.TransitionTo(payment.AttemptStatusCaptured); err != nil {
 			return err
@@ -188,26 +252,16 @@ func applyCapture(attempt *payment.PaymentAttempt, intent *payment.PaymentIntent
 		}
 	}
 
-	capturedAMount := int64(0)
-
-	for _, capture := range event.Data.Captures {
-		capturedAMount += capture.CaptureAmount
-	}
-
-	if capturedAMount <= 0 {
-		capturedAMount = event.Data.RequestAmount
-	}
-
-	if capturedAMount > intent.Amount {
-		return fmt.Errorf("captured amount %d exceeds payment amount %d", capturedAMount, intent.Amount)
-	}
-
-	intent.CapturedAmount = capturedAMount
+	intent.CapturedAmount = capturedAmount
 
 	return nil
 }
 
-func applyFailure(attempt *payment.PaymentAttempt, intent *payment.PaymentIntent, event xenditprovider.PaymentWebhook) error {
+func applyFailure(
+	attempt *payment.PaymentAttempt,
+	intent *payment.PaymentIntent,
+	event xenditprovider.PaymentWebhook,
+) error {
 	if attempt.Status == payment.AttemptStatusCaptured {
 		return nil
 	}
