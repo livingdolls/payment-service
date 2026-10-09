@@ -45,7 +45,7 @@ func main() {
 	createPaymentUseCase := application.NewCreatePaymentUseCase(transactionManager)
 	webhookProcessor := application.NewWebhookProcessor(db, transactionManager)
 	webhookService := webhook.NewService(webhookRepository, cfg.XenditWebhookToken)
-	reconciliationProcessor := application.NewReconciliationProcessor(db, xenditProvider, processPaymentUseCase)
+	reconciliationProcessor := application.NewReconciliationProcessor(db, xenditProvider, xenditProvider, processPaymentUseCase)
 
 	paymentHandler := handler.NewPaymentHandler(createPaymentUseCase, processPaymentUseCase)
 	webhookHandler := handler.NewWebhookHandler(webhookService)

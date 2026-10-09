@@ -17,63 +17,69 @@ const (
 )
 
 type ReconciliationProcessor struct {
-	db             database.DBTX
-	statusReader   provider.PaymentStatusReader
-	processPayment *ProcessPaymentUseCase
+	db              database.DBTX
+	statusReader    provider.PaymentStatusReader
+	referenceLookup provider.TransactionReferenceLookup
+	processPayment  *ProcessPaymentUseCase
 }
 
-func NewReconciliationProcessor(db database.DBTX, statusReader provider.PaymentStatusReader, processPayment *ProcessPaymentUseCase) *ReconciliationProcessor {
+func NewReconciliationProcessor(db database.DBTX, statusReader provider.PaymentStatusReader, referenceLookup provider.TransactionReferenceLookup, processPayment *ProcessPaymentUseCase) *ReconciliationProcessor {
 	return &ReconciliationProcessor{
-		db:             db,
-		statusReader:   statusReader,
-		processPayment: processPayment,
+		db:              db,
+		statusReader:    statusReader,
+		referenceLookup: referenceLookup,
+		processPayment:  processPayment,
 	}
 }
 
 func (p *ReconciliationProcessor) ProcessNext(ctx context.Context) (bool, error) {
 	repo := paymentpostgres.NewReconciliationRepository(p.db)
 
-	attempt, err := repo.ClaimNext(
-		ctx,
-		reconcileMinAge,
-		reconcileCooldown,
-	)
+	job, err := repo.ClaimNext(ctx, reconcileMinAge, reconcileCooldown)
 
 	if err != nil {
 		return false, err
 	}
 
-	if attempt == nil {
+	if job == nil {
 		return false, nil
 	}
 
 	err = p.reconcileAttempt(
 		ctx,
-		attempt.ID,
+		job.AttemptID,
 	)
 
 	if err != nil {
-		message := err.Error()
+		nextFailure := job.ReconcileFailures + 1
 
-		if len(message) > 500 {
-			message = message[:500]
-		}
+		delay := reconciliationBackoff(nextFailure)
 
-		recordErr := repo.RecordError(
+		markErr := repo.MarkFailure(
 			ctx,
-			attempt.ID,
-			message,
+			job,
+			err.Error(),
+			delay,
+			reconcileMaxFailures,
 		)
 
-		if recordErr != nil {
+		if markErr != nil {
 			return true, fmt.Errorf(
-				"reconciliation failed: %v; record error: %w",
+				"reconcile: %v; mark failure: %w",
 				err,
-				recordErr,
+				markErr,
 			)
 		}
 
 		return true, err
+	}
+
+	if err := repo.MarkSuccess(
+		ctx,
+		job,
+		reconcileCooldown,
+	); err != nil {
+		return true, nil
 	}
 
 	return true, nil
@@ -109,17 +115,48 @@ func (p *ReconciliationProcessor) reconcileAttempt(ctx context.Context, attemptI
 		return err
 	}
 
-	if attempt.ProviderPaymentRequestID == nil {
-		return fmt.Errorf(
-			"cannot reconcile without provider payment request id",
-		)
+	var paymentRequestID string
+
+	if attempt.ProviderPaymentRequestID != nil {
+		paymentRequestID = *attempt.ProviderPaymentRequestID
 	}
 
-	paymentRequestID := *attempt.ProviderPaymentRequestID
+	// Recovery khusus jika Xendit belum
+	// memberikan payment_request_id kepada kita.
 
-	// Tidak ada transaction DB yang terbuka
-	// saat request ke Xendit dilakukan.
-	requestCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	if paymentRequestID == "" {
+		lookupCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+
+		recoverID, found, lookupErr := p.referenceLookup.FindPaymentRequestIDByReference(
+			lookupCtx,
+			intent.ReferenceID,
+			intent.Currency,
+			intent.Amount,
+		)
+
+		cancel()
+
+		if lookupErr != nil {
+			return fmt.Errorf(
+				"lookup transaction by reference: %w",
+				lookupErr,
+			)
+		}
+
+		if !found {
+			return fmt.Errorf(
+				"provider payment request not yet identifable for reference %s",
+				intent.ReferenceID,
+			)
+		}
+
+		paymentRequestID = recoverID
+	}
+
+	requestCtx, cancel := context.WithTimeout(
+		ctx,
+		10*time.Second,
+	)
 
 	snapshot, err := p.statusReader.GetPaymentRequest(
 		requestCtx,
@@ -135,33 +172,27 @@ func (p *ReconciliationProcessor) reconcileAttempt(ctx context.Context, attemptI
 		)
 	}
 
-	// Pastikan hasil dari Xendit benar-benar
-	// milik PaymentIntent yang kita cari.
+	// Wajib divalidasi sebelum update state.
 
 	if snapshot.PaymentRequestID != paymentRequestID {
-		return fmt.Errorf(
-			"provider payment request id missmatch",
-		)
+		return fmt.Errorf("provider payment request ID mismatch")
 	}
 
 	if snapshot.ReferenceID != intent.ReferenceID {
+		return fmt.Errorf("provieder reference ID mismatch")
+	}
+
+	if snapshot.Amount != intent.Amount {
 		return fmt.Errorf(
-			"provider reference id mismatch",
+			"provider payment amount mismatch",
 		)
 	}
 
 	if snapshot.Currency != intent.Currency {
 		return fmt.Errorf(
-			"provider currency mismatch",
+			"provider payment currency mismatch",
 		)
 	}
-
-	if snapshot.Amount != intent.Amount {
-		return fmt.Errorf("provider amount mismatch")
-	}
-
-	// Reuse state-transition logic dari
-	// ProcessPaymentUseCase.
 
 	_, err = p.processPayment.applyProviderResult(
 		ctx,
@@ -176,7 +207,7 @@ func (p *ReconciliationProcessor) reconcileAttempt(ctx context.Context, attemptI
 	)
 
 	if err != nil {
-		return fmt.Errorf("apply reconciled payment state: %w", err)
+		return fmt.Errorf("apply reconciled state: %w", err)
 	}
 
 	return nil

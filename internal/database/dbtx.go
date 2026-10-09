@@ -11,6 +11,8 @@ import (
 type DBTX interface {
 	Exec(ctx context.Context, sql string, arguments ...any) (pgconn.CommandTag, error)
 	QueryRow(ctx context.Context, sql string, args ...any) pgx.Row
+	Query(ctx context.Context, sql string, args ...any) (pgx.Rows, error)
 }
 
 var _ DBTX = (*pgxpool.Pool)(nil)
+var _ DBTX = (pgx.Tx)(nil)
