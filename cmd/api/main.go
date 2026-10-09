@@ -14,6 +14,7 @@ import (
 	"github.com/livingdolls/payment-service/internal/database"
 	router "github.com/livingdolls/payment-service/internal/http"
 	"github.com/livingdolls/payment-service/internal/http/handler"
+	reviewpostgres "github.com/livingdolls/payment-service/internal/modules/reconciliation/postgres"
 	"github.com/livingdolls/payment-service/internal/modules/webhook"
 	webhookpostgres "github.com/livingdolls/payment-service/internal/modules/webhook/postgres"
 	"github.com/livingdolls/payment-service/internal/provider/xendit"
@@ -41,19 +42,22 @@ func main() {
 
 	transactionManager := database.NewTransactor(db)
 	webhookRepository := webhookpostgres.NewRepository(db)
+	reviewRepository := reviewpostgres.NewReviewRepository(db, transactionManager)
 	processPaymentUseCase := application.NewProcessPaymentUseCase(transactionManager, xenditProvider)
 	createPaymentUseCase := application.NewCreatePaymentUseCase(transactionManager)
+	reviewUseCase := application.NewReconciliationReviewUseCase(reviewRepository)
 	webhookProcessor := application.NewWebhookProcessor(db, transactionManager)
 	webhookService := webhook.NewService(webhookRepository, cfg.XenditWebhookToken)
 	reconciliationProcessor := application.NewReconciliationProcessor(db, xenditProvider, xenditProvider, processPaymentUseCase)
 
 	paymentHandler := handler.NewPaymentHandler(createPaymentUseCase, processPaymentUseCase)
 	webhookHandler := handler.NewWebhookHandler(webhookService)
+	reviewHandler := handler.NewReconciliationReviewHandler(reviewUseCase)
 
 	webhookWorker := worker.NewWebhookWorker(webhookProcessor)
 	reconciliationWorker := worker.NewReconciliationWorker(reconciliationProcessor)
 
-	router := router.NewRouter(db, paymentHandler, webhookHandler)
+	router := router.NewRouter(db, paymentHandler, webhookHandler, reviewHandler, cfg.AdminAPIToken, cfg.AdminAPIActor)
 
 	server := &http.Server{
 		Addr:              ":" + cfg.HTTPPort,

@@ -13,6 +13,9 @@ type Config struct {
 	XenditSecretKey    string
 	XenditBaseURL      string
 	XenditWebhookToken string
+
+	AdminAPIToken string
+	AdminAPIActor string
 }
 
 func LoadConfig() (*Config, error) {
@@ -24,6 +27,8 @@ func LoadConfig() (*Config, error) {
 		XenditSecretKey:    os.Getenv("XENDIT_SECRET_KEY"),
 		XenditBaseURL:      getEnv("XENDIT_BASE_URL", "https://api.xendit.co"),
 		XenditWebhookToken: os.Getenv("XENDIT_WEBHOOK_TOKEN"),
+		AdminAPIToken:      os.Getenv("ADMIN_API_TOKEN"),
+		AdminAPIActor:      getEnv("ADMIN_API_ACTOR", "local-admin-api"),
 	}
 
 	if cfg.DatabaseURL == "" {
@@ -36,6 +41,10 @@ func LoadConfig() (*Config, error) {
 
 	if cfg.XenditWebhookToken == "" {
 		return nil, fmt.Errorf("XENDIT_WEBHOOK_TOKEN is required")
+	}
+
+	if len(cfg.AdminAPIToken) < 32 {
+		return nil, fmt.Errorf("ADMIN_API_TOKEN must contain a sufficiently long secret")
 	}
 
 	return cfg, nil
