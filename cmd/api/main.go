@@ -14,6 +14,9 @@ import (
 	"github.com/livingdolls/payment-service/internal/database"
 	router "github.com/livingdolls/payment-service/internal/http"
 	"github.com/livingdolls/payment-service/internal/http/handler"
+	"github.com/livingdolls/payment-service/internal/modules/outbox"
+	"github.com/livingdolls/payment-service/internal/modules/outbox/orderhttp"
+	outboxpostgres "github.com/livingdolls/payment-service/internal/modules/outbox/postgres"
 	reviewpostgres "github.com/livingdolls/payment-service/internal/modules/reconciliation/postgres"
 	"github.com/livingdolls/payment-service/internal/modules/webhook"
 	webhookpostgres "github.com/livingdolls/payment-service/internal/modules/webhook/postgres"
@@ -39,6 +42,22 @@ func main() {
 	}
 
 	defer db.Close()
+
+	if cfg.OutboxPublishedEnabled {
+		outboxRepository := outboxpostgres.NewRepository(db)
+		orderPublisher, err := orderhttp.NewPublisher(cfg.OrderServiceURL, cfg.OrderServiceToken, nil)
+
+		if err != nil {
+			slog.Error("failed to connect order publisher", "error", err)
+			os.Exit(1)
+		}
+
+		var publisher outbox.Publisher = orderPublisher
+
+		outboxWorker := worker.NewOutboxWorker(outboxRepository, publisher)
+
+		go outboxWorker.Run(ctx)
+	}
 
 	transactionManager := database.NewTransactor(db)
 	webhookRepository := webhookpostgres.NewRepository(db)

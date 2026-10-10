@@ -8,24 +8,7 @@ cd "$repo_dir"
 die() { printf '%s\n' "$*" >&2; exit 2; }
 need() { command -v "$1" >/dev/null 2>&1 || die "Required command unavailable: $1"; }
 
-# Read simple KEY=VALUE dotenv entries without evaluating shell commands. An
-# explicitly exported value takes precedence over the repository .env.
-load_env() {
-  [[ -f .env ]] || return 0
-  local line key value
-  while IFS= read -r line || [[ -n "$line" ]]; do
-    line="${line%$'\r'}"
-    [[ "$line" =~ ^[[:space:]]*(export[[:space:]]+)?([A-Za-z_][A-Za-z0-9_]*)=(.*)$ ]] || continue
-    key="${BASH_REMATCH[2]}"
-    value="${BASH_REMATCH[3]}"
-    value="${value#"${value%%[![:space:]]*}"}"
-    value="${value%"${value##*[![:space:]]}"}"
-    if [[ "$value" == \"*\" || "$value" == \'*\' ]]; then
-      value="${value:1:${#value}-2}"
-    fi
-    [[ -v "$key" ]] || export "$key=$value"
-  done < .env
-}
+source "$repo_dir/scripts/with-env.sh"
 
 align_go() {
   need go
@@ -58,7 +41,7 @@ prepare_database() {
   printf 'Dedicated test database ready: %s\n' "$name"
 }
 
-load_env
+load_env "${ENV_FILE:-.env}"
 align_go
 mode="${1:-local}"
 if [[ $# -gt 0 ]]; then shift; fi

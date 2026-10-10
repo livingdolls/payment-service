@@ -3,13 +3,74 @@
 Service Go untuk membuat payment intent, mengirim payment request ke Xendit v3,
 menerima webhook, dan menjalankan reconciliation. Proyek ini masih dalam pengembangan.
 
+## Development dengan Makefile
+
+Butuh GNU Make, Bash, Go 1.26, Docker Compose, dan `goose` di PATH. Siapkan `.env`
+berdasarkan `.env.example` dengan credential Xendit TEST mode dan token admin acak
+minimal 32 karakter. Makefile memuat `.env` otomatis; tidak perlu menjalankan
+`source .env` setiap kali. Urutan prioritas: argumen `make` → `.env` → environment
+terminal. Perubahan `.env` langsung dipakai walaupun terminal masih menyimpan
+nilai lama dari `source .env`. Nilai dotenv dibaca sebagai teks literal,
+termasuk karakter `$` dan `#`; bungkus nilai dengan tanda kutip jika diperlukan,
+dan letakkan komentar pada baris terpisah.
+
+```sh
+make help
+make dev                         # PostgreSQL siap → goose up → API
+```
+
+`make dev` menggunakan PostgreSQL dari Docker Compose dan `DATABASE_URL` dari
+`.env`; pastikan host, port, user, dan nama database sesuai konfigurasi Compose.
+Untuk database yang sudah berjalan, cukup jalankan:
+
+```sh
+make migrate-up
+make run
+```
+
+Perintah lain yang tersedia:
+
+```sh
+make run HTTP_PORT=8081          # Override environment untuk satu perintah
+make run ENV_FILE=.env.local     # Gunakan file environment lain
+make build                      # Binary: bin/payment-api
+make deps
+make fmt
+make vet
+make test                       # Unit test dan coverage
+make test-race                  # Unit test dengan race detector
+make test ARGS='-run TestName'
+make db-logs
+make db-down                    # Volume database tetap disimpan
+```
+
+`make test-race` dan `make test-local` membutuhkan compiler C seperti `gcc` atau
+`clang`; kedua target mengaktifkan `CGO_ENABLED=1` untuk race detector.
+
+Migrasi memakai `DATABASE_URL` dan driver PostgreSQL. Goose menerima konfigurasi
+melalui environment; connection string tidak dicetak oleh recipe Makefile.
+
+```sh
+make migrate-up
+make migrate-down               # Rollback satu migrasi terakhir
+make migrate-status
+make migrate-version
+make migrate-validate           # Validasi tanpa mengubah database
+make migrate-create NAME=add_customer_id
+```
+
+Migrasi baru menggunakan penomoran berurutan (`goose -s`), sesuai file yang sudah
+ada di `migrations/`. Nama migrasi harus diawali huruf kecil dan hanya memuat
+huruf kecil, angka, atau underscore. Folder bisa diganti dengan
+`MIGRATIONS_DIR=folder_migrasi`.
+
 ## Menjalankan pengujian lokal
 
 Butuh Go 1.26, PostgreSQL, `psql`, dan `goose`. Jika database compose belum aktif:
 
 ```sh
-docker compose up -d postgres
-bash scripts/test-payment.sh local
+make db-up
+make test-local
 ```
 
 Satu perintah tersebut menjalankan unit test dengan race detector/coverage,
@@ -38,7 +99,7 @@ Script hanya mengizinkan `APP_ENV=development/test`, prefix key development/test
 dan database terpisah berakhiran `_test`.
 
 ```sh
-bash scripts/test-payment.sh sandbox
+make sandbox
 ```
 
 Script membuat `payment_service_sandbox_test`, menjalankan migration asli,
@@ -62,20 +123,22 @@ payment. Pada terminal non-interaktif, runner tetap terblokir sampai
 Untuk menyiapkan API/tunnel terlebih dahulu tanpa membuat payment:
 
 ```sh
-bash scripts/test-payment.sh sandbox-setup
+make sandbox-setup
 ```
 
 Biarkan terminal setup aktif ketika mengubah dashboard. Untuk memakai API/tunnel
 yang sudah berjalan dan menguji channel tertentu:
 
 ```sh
-SANDBOX_REUSE_API=1 \
-SANDBOX_DATABASE_URL='postgres://payment:payment@127.0.0.1:5433/payment_service_sandbox_test?sslmode=disable' \
-SANDBOX_PUBLIC_URL='https://PUBLIC-TUNNEL' \
-SANDBOX_CALLBACK_CONFIGURED=1 \
-bash scripts/test-payment.sh sandbox -channel BCA_VIRTUAL_ACCOUNT,QRIS -timeout 120s
+make sandbox \
+  SANDBOX_REUSE_API=1 \
+  SANDBOX_PUBLIC_URL='https://PUBLIC-TUNNEL' \
+  SANDBOX_CALLBACK_CONFIGURED=1 \
+  ARGS='-channel BCA_VIRTUAL_ACCOUNT,QRIS -timeout 120s'
 ```
 
+`SANDBOX_DATABASE_URL` otomatis diturunkan dari `DATABASE_URL` di `.env`; berikan
+sebagai argumen `make` jika database API yang sudah berjalan berbeda.
 `SANDBOX_PUBLIC_URL` dapat memakai tunnel selain ngrok, asalkan meneruskan ke API
 yang sama. `PAYMENT_SANDBOX_PORT` mengganti port API. Untuk menjalankan runner
 langsung terhadap binary API yang telah aktif, export environment sandbox yang
@@ -107,7 +170,7 @@ yang dapat diuji, dan 11 blocker dengan tautan bukti dokumentasi resmi.
 Melihat katalog tanpa koneksi jaringan:
 
 ```sh
-go run ./cmd/payment-test -list
+make channels
 ```
 
 | Status | Arti |
