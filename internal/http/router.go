@@ -11,7 +11,7 @@ import (
 	"github.com/livingdolls/payment-service/internal/http/middleware"
 )
 
-func NewRouter(db *pgxpool.Pool, paymentHandler *handler.PaymentHandler, webhookHandler *handler.WebhookHandler, reviewHandler *handler.ReconciliationReviewHandler, adminToken string, adminActor string) *gin.Engine {
+func NewRouter(db *pgxpool.Pool, paymentHandler *handler.PaymentHandler, webhookHandler *handler.WebhookHandler, reviewHandler *handler.ReconciliationReviewHandler, adminToken string, adminActor string, paymentInternalToken string) *gin.Engine {
 	router := gin.New()
 
 	router.Use(gin.Logger())
@@ -39,6 +39,7 @@ func NewRouter(db *pgxpool.Pool, paymentHandler *handler.PaymentHandler, webhook
 	v1 := router.Group("/v1")
 	webhooks := router.Group("/webhooks")
 	admin := router.Group("/admin", middleware.RequireAdmin(adminToken, adminActor))
+	internal := router.Group("/internal", middleware.RequireServiceToken(paymentInternalToken))
 
 	payments := v1.Group("/payments")
 	attempts := v1.Group("/payment-attempts")
@@ -51,6 +52,8 @@ func NewRouter(db *pgxpool.Pool, paymentHandler *handler.PaymentHandler, webhook
 
 	admin.GET("/reconciliation-reviews", reviewHandler.List)
 	admin.POST("/payment-attempts/:attempt_id/requeue-reconciliation", reviewHandler.Requeue)
+
+	internal.POST("/payments", paymentHandler.Create)
 
 	return router
 }

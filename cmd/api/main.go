@@ -76,7 +76,7 @@ func main() {
 	webhookWorker := worker.NewWebhookWorker(webhookProcessor)
 	reconciliationWorker := worker.NewReconciliationWorker(reconciliationProcessor)
 
-	router := router.NewRouter(db, paymentHandler, webhookHandler, reviewHandler, cfg.AdminAPIToken, cfg.AdminAPIActor)
+	router := router.NewRouter(db, paymentHandler, webhookHandler, reviewHandler, cfg.AdminAPIToken, cfg.AdminAPIActor, cfg.PaymentInternalToken)
 
 	server := &http.Server{
 		Addr:              ":" + cfg.HTTPPort,

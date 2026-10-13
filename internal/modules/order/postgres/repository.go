@@ -16,6 +16,7 @@ type Repository struct {
 }
 
 var _ order.Repository = (*Repository)(nil)
+var _ order.CheckoutRepository = (*Repository)(nil)
 
 func NewRepository(db *pgxpool.Pool) *Repository {
 	return &Repository{

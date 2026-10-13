@@ -13,8 +13,10 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/livingdolls/payment-service/internal/http/middleware"
 	"github.com/livingdolls/payment-service/internal/modules/order"
 	orderhttp "github.com/livingdolls/payment-service/internal/modules/order/http"
+	"github.com/livingdolls/payment-service/internal/modules/order/paymenthttp"
 	orderpostgres "github.com/livingdolls/payment-service/internal/modules/order/postgres"
 )
 
@@ -22,6 +24,7 @@ func main() {
 	databaseURL := os.Getenv("ORDER_DATABASE_URL")
 	serviceToken := os.Getenv("ORDER_SERVICE_TOKEN")
 	serverPort := os.Getenv("ORDER_HTTP_PORT")
+	checkoutToken := os.Getenv("CHECKOUT_TEST_TOKEN")
 
 	if serverPort == "" {
 		serverPort = "8181"
@@ -33,6 +36,11 @@ func main() {
 
 	if len(serviceToken) < 32 {
 		log.Fatal("ORDER_SERVICE_TOKEN is invalid")
+	}
+
+	if len(checkoutToken) < 32 {
+		log.Fatal("CHECKOUT_TEST_TOKEN is required")
+
 	}
 
 	ctx, stop := signal.NotifyContext(
@@ -53,10 +61,19 @@ func main() {
 		log.Fatal(err)
 	}
 
+	paymentClient, err := paymenthttp.NewClient(os.Getenv("PAYMENT_SERVICE_URL"), os.Getenv("PAYMENT_INTERNAL_TOKEN"))
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	orderRepository := orderpostgres.NewRepository(db)
 	orderConsumer := order.NewConsumer(orderRepository)
 
+	checkoutService := order.NewCheckoutService(orderRepository, paymentClient)
+
 	orderHandler := orderhttp.NewHandler(orderConsumer, serviceToken)
+	checkoutHandler := orderhttp.NewCheckoutHandler(checkoutService)
 
 	router := gin.New()
 
@@ -66,6 +83,7 @@ func main() {
 	)
 
 	router.POST("/internal/events/payments", orderHandler.ConsumePaymentEvent)
+	router.POST("/orders/:order_id/checkout", middleware.RequireServiceToken(checkoutToken), checkoutHandler.Start)
 
 	server := &http.Server{
 		Addr:              net.JoinHostPort("127.0.0.1", serverPort),

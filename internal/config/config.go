@@ -21,6 +21,8 @@ type Config struct {
 	OutboxPublishedEnabled bool
 	OrderServiceURL        string
 	OrderServiceToken      string
+
+	PaymentInternalToken string
 }
 
 func LoadConfig() (*Config, error) {
@@ -29,11 +31,12 @@ func LoadConfig() (*Config, error) {
 		HTTPPort:    getEnv("HTTP_PORT", "8080"),
 		DatabaseURL: os.Getenv("DATABASE_URL"),
 
-		XenditSecretKey:    os.Getenv("XENDIT_SECRET_KEY"),
-		XenditBaseURL:      getEnv("XENDIT_BASE_URL", "https://api.xendit.co"),
-		XenditWebhookToken: os.Getenv("XENDIT_WEBHOOK_TOKEN"),
-		AdminAPIToken:      os.Getenv("ADMIN_API_TOKEN"),
-		AdminAPIActor:      getEnv("ADMIN_API_ACTOR", "local-admin-api"),
+		XenditSecretKey:      os.Getenv("XENDIT_SECRET_KEY"),
+		XenditBaseURL:        getEnv("XENDIT_BASE_URL", "https://api.xendit.co"),
+		XenditWebhookToken:   os.Getenv("XENDIT_WEBHOOK_TOKEN"),
+		AdminAPIToken:        os.Getenv("ADMIN_API_TOKEN"),
+		AdminAPIActor:        getEnv("ADMIN_API_ACTOR", "local-admin-api"),
+		PaymentInternalToken: os.Getenv("PAYMENT_INTERNAL_TOKEN"),
 	}
 
 	if cfg.DatabaseURL == "" {
@@ -70,6 +73,10 @@ func LoadConfig() (*Config, error) {
 		if len(cfg.OrderServiceToken) < 32 {
 			return nil, fmt.Errorf("ORDER_SERVICE_TOKEN must contain a sufficiently long secret")
 		}
+	}
+
+	if len(cfg.PaymentInternalToken) < 32 {
+		return nil, fmt.Errorf("PAYMENT_INTERNAL_TOKEN is required")
 	}
 
 	return cfg, nil
