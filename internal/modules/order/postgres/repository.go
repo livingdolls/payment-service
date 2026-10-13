@@ -188,3 +188,100 @@ func (r *Repository) ConsumePaymentCaptured(ctx context.Context, event outbox.Pa
 
 	return false, nil
 }
+
+func (r *Repository) GetForCheckout(ctx context.Context, orderID string) (*order.CheckoutOrder, error) {
+	const query = `
+		SELECT
+			id,
+			amount,
+			currency,
+			status,
+			payment_intent_id
+		FROM orders
+		WHERE id = $1
+	`
+
+	result := &order.CheckoutOrder{}
+
+	err := r.db.QueryRow(
+		ctx,
+		query,
+		orderID,
+	).Scan(
+		&result.ID,
+		&result.Amount,
+		&result.Currency,
+		&result.Status,
+		&result.PaymentIntentID,
+	)
+
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, order.ErrOrderNotFound
+	}
+
+	if err != nil {
+		return nil, fmt.Errorf("get order for checkout: %w", err)
+	}
+
+	return result, nil
+}
+
+func (r *Repository) BindPaymentIntent(ctx context.Context, checkoutOrder order.CheckoutOrder, paymentIntentID string) error {
+	const query = `
+		UPDATE orders
+		SET
+			payment_intent_id = $2::uuid,
+			updated_at = NOW()
+
+		WHERE id = $1
+			AND status = 'PENDING_PAYMENT'
+			AND payment_intent_id IS NULL
+			AND amount = $3
+			AND currency = $4
+	`
+
+	result, err := r.db.Exec(
+		ctx,
+		query,
+		checkoutOrder.ID,
+		paymentIntentID,
+		checkoutOrder.Amount,
+		checkoutOrder.Currency,
+	)
+
+	if err != nil {
+		return fmt.Errorf("bind payment intent to order: %w", err)
+	}
+
+	if result.RowsAffected() == 1 {
+		return nil
+	}
+
+	// UPDATE 0 bisa berarti request lain sudah
+	// melakukan binding lebih dulu.
+
+	current, err := r.GetForCheckout(ctx, checkoutOrder.ID)
+	if err != nil {
+		return err
+	}
+
+	if current.Status != "PENDING_PAYMENT" {
+		return order.ErrOrderNotPayable
+	}
+
+	if current.Amount != checkoutOrder.Amount || current.Currency != checkoutOrder.Currency {
+		return order.ErrCheckoutOrderChanged
+	}
+
+	// Dua request memakai payment yang sama:
+	// anggap binding idempotent.
+	if current.PaymentIntentID != nil {
+		if *current.PaymentIntentID == paymentIntentID {
+			return nil
+		}
+
+		return order.ErrCheckoutAlreadyBound
+	}
+
+	return order.ErrCheckoutOrderChanged
+}
