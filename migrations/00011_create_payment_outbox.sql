@@ -73,7 +73,7 @@ BEGIN
             'payment.captured.v1',
             jsonb_build_object(
                 'event_id', new_event_id::TEXT,
-                'event_type', 'payment.capture.v1',
+                'event_type', 'payment.captured.v1',
                 'payment_intent_id', NEW.id::TEXT,
                 'reference_id', NEW.reference_id,
                 'order_id', NEW.order_id,

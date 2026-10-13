@@ -116,9 +116,9 @@ func (r *Repository) MarkDead(ctx context.Context, id string, claimToken string,
 			claim_token = NULL,
 			claimed_at = NULL,
 			last_error = LEFT($3, 1000),
-			updated_at = NOW
+			updated_at = NOW()
 		WHERE id = $1
-			AND claim_token = $::uuid
+			AND claim_token = $2::uuid
 			AND status = 'PROCESSING'
 	`
 
@@ -201,7 +201,7 @@ func (r *Repository) MarkPublished(ctx context.Context, id string, claimToken st
 	const query = `
 		UPDATE outbox_events
 		SET
-			status = 'PUBLISHED'
+			status = 'PUBLISHED',
 			published_at = NOW(),
 			claim_token = NULL,
 			claimed_at = NULL,

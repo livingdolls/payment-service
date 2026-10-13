@@ -36,22 +36,28 @@ func NewPublisher(baseURL string, token string, client *http.Client) (*Publisher
 
 	host := parsed.Hostname()
 
-	localHTTP := parsed.Scheme == "http" && (host == "localhost" || host == "127.0.0.1" || host == "::1")
+	localHost := host == "localhost" || host == "127.0.0.1" || host == "::1"
+	localHTTP := parsed.Scheme == "http" && localHost
 
-	if parsed.Host == "" || (parsed.Scheme != "https" && !localHTTP) || parsed.User != nil || parsed.RawQuery != "" || parsed.Fragment != "" {
+	unsupportedScheme := parsed.Scheme != "https" && !localHTTP
+	containsCredentials := parsed.User != nil
+	containsQueryOrFragment := parsed.RawQuery != "" || parsed.Fragment != ""
+	if parsed.Host == "" || unsupportedScheme || containsCredentials || containsQueryOrFragment {
 		return nil, fmt.Errorf("order service requires HTTPS or localhost HTTP")
 	}
 
-	if client == nil {
-		client = &http.Client{
-			Timeout: 10 * time.Second,
-		}
+	publisherClient := http.Client{Timeout: 10 * time.Second}
+	if client != nil {
+		publisherClient = *client
+	}
+	publisherClient.CheckRedirect = func(*http.Request, []*http.Request) error {
+		return http.ErrUseLastResponse
 	}
 
 	return &Publisher{
 		endpoint: baseURL + "/internal/events/payments",
 		token:    token,
-		client:   client,
+		client:   &publisherClient,
 	}, nil
 }
 
@@ -76,13 +82,22 @@ func (p *Publisher) Publish(ctx context.Context, event *outbox.Event) error {
 
 	// Event yang dikirim harus sesuai dengan
 	// metadata event yang tersimpan di database.
-	if payload.EventID != event.ID || payload.EventType != event.EventType || payload.PaymentIntentID != event.AggregateID || payload.OrderID == "" || payload.Amount <= 0 || payload.Currency == "" || payload.CapturedAmount != payload.Amount {
+	identityMismatch := payload.EventID != event.ID || payload.EventType != event.EventType ||
+		payload.PaymentIntentID != event.AggregateID
+	invalidPayment := payload.OrderID == "" || payload.Amount <= 0 || payload.Currency == ""
+	incompleteCapture := payload.CapturedAmount != payload.Amount
+	if identityMismatch || invalidPayment || incompleteCapture {
 		return fmt.Errorf(
 			"%w: payment captured payload missmatch", outbox.ErrInvalidPayload,
 		)
 	}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, p.endpoint, bytes.NewReader(event.Payload))
+	req, err := http.NewRequestWithContext(
+		ctx,
+		http.MethodPost,
+		p.endpoint,
+		bytes.NewReader(event.Payload),
+	)
 
 	if err != nil {
 		return fmt.Errorf("build order service request: %w", err)

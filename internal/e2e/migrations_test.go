@@ -91,7 +91,7 @@ func TestEmptyDatabaseMigrationRoundtrip(t *testing.T) {
 		ORDER BY id DESC LIMIT 1
 	`
 	row := db.QueryRow(ctx, latestMigration)
-	if err := row.Scan(&version, &applied); err != nil || version != 10 || !applied {
+	if err := row.Scan(&version, &applied); err != nil || version != 11 || !applied {
 		t.Fatalf(
 			"roundtrip migration version=%d applied=%t error=%v",
 			version,

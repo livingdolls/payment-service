@@ -103,11 +103,11 @@ func (w *OutboxWorker) ProcessNext(ctx context.Context) (bool, error) {
 	)
 
 	if markErr != nil {
-		return true, fmt.Errorf("publish error %v; mark retry: %w", markErr, err)
+		return true, fmt.Errorf("publish error %v; mark retry: %w", err, markErr)
 	}
 
 	slog.Warn(
-		"outbox event published",
+		"outbox delivery failed",
 		"event", event.ID,
 		"attempt_count", event.AttemptCount,
 		"next_status", status,
@@ -143,6 +143,7 @@ func (w *OutboxWorker) Run(ctx context.Context) error {
 		select {
 		case <-ctx.Done():
 			slog.Info("outbox worker shutting down")
+			return nil
 		case <-ticker.C:
 			w.processBatch(ctx)
 		}

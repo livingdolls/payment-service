@@ -162,7 +162,7 @@ func (r *Repository) ConsumePaymentCaptured(ctx context.Context, event outbox.Pa
 			SET
 				status = 'PAID',
 				paid_at = NOW(),
-				updated_at = NOW(),
+				updated_at = NOW()
 			WHERE id = $1
 				AND status = 'PENDING_PAYMENT'
 		`

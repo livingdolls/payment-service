@@ -1,9 +1,10 @@
-package orderservice
+package main
 
 import (
 	"context"
 	"errors"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -20,6 +21,11 @@ import (
 func main() {
 	databaseURL := os.Getenv("ORDER_DATABASE_URL")
 	serviceToken := os.Getenv("ORDER_SERVICE_TOKEN")
+	serverPort := os.Getenv("ORDER_HTTP_PORT")
+
+	if serverPort == "" {
+		serverPort = "8181"
+	}
 
 	if databaseURL == "" {
 		log.Fatal("ORDER_DATABASE_URL is required")
@@ -62,7 +68,7 @@ func main() {
 	router.POST("/internal/events/payments", orderHandler.ConsumePaymentEvent)
 
 	server := &http.Server{
-		Addr:              "127.0.0.1:8181",
+		Addr:              net.JoinHostPort("127.0.0.1", serverPort),
 		Handler:           router,
 		ReadHeaderTimeout: 5 * time.Second,
 		ReadTimeout:       10 * time.Second,
@@ -76,7 +82,7 @@ func main() {
 		defer cancel()
 
 		if err := server.Shutdown(shutdownCtx); err != nil {
-			log.Printf("shutdown error: %w", err)
+			log.Printf("shutdown error: %v", err)
 		}
 	}()
 
