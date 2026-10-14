@@ -23,6 +23,7 @@ type Client struct {
 }
 
 var _ order.PaymentCreator = (*Client)(nil)
+var _ order.PaymentFlowGateway = (*Client)(nil)
 
 func NewClient(baseURL string, token string) (*Client, error) {
 	baseURL = strings.TrimRight(baseURL, "/")
@@ -172,4 +173,96 @@ func (c *Client) CreatePayment(ctx context.Context, checkoutOrder order.Checkout
 
 		Status: payload.Status,
 	}, nil
+}
+
+func (c *Client) GetStatus(ctx context.Context, paymentID string) (*order.PaymentSnapshot, error) {
+	endpoint := c.baseURL + "/internal/payments/" + url.PathEscape(paymentID) + "/status"
+
+	req, err := http.NewRequestWithContext(
+		ctx,
+		http.MethodGet,
+		endpoint,
+		nil,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set(
+		"Authorization",
+		"Bearer "+c.token,
+	)
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("%w: %v", order.ErrPaymentServiceUnavailable, err)
+	}
+
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf(
+			"%w: status endpoint returned %d",
+			order.ErrPaymentServiceUnavailable,
+			resp.StatusCode,
+		)
+	}
+
+	var snapshot order.PaymentSnapshot
+
+	if err := json.NewDecoder(io.LimitReader(resp.Body, 1<<20)).Decode(&snapshot); err != nil {
+		return nil, fmt.Errorf("%w: invalid status response: %v", order.ErrPaymentServiceUnavailable, err)
+	}
+
+	return &snapshot, nil
+}
+
+func (c *Client) Process(ctx context.Context, attemptID string, channelCode string) error {
+	endpoint := c.baseURL + "/internal/payment-attempts/" + url.PathEscape(attemptID) + "/process"
+
+	payload, err := json.Marshal(map[string]any{
+		"country":      "ID",
+		"channel_code": channelCode,
+	})
+
+	if err != nil {
+		return err
+	}
+
+	req, err := http.NewRequestWithContext(
+		ctx,
+		http.MethodPost,
+		endpoint,
+		bytes.NewReader(payload),
+	)
+
+	if err != nil {
+		return err
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+c.token)
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return fmt.Errorf(
+			"%w: %v",
+			order.ErrPaymentProcessingUncertain,
+			err,
+		)
+	}
+	defer resp.Body.Close()
+
+	_, _ = io.Copy(io.Discard, io.LimitReader(resp.Body, 4096))
+
+	switch resp.StatusCode {
+	case http.StatusOK, http.StatusCreated, http.StatusAccepted:
+		return nil
+	case http.StatusConflict:
+		return nil
+	case http.StatusBadRequest, http.StatusUnprocessableEntity:
+		return order.ErrPaymentProcessingRejected
+	default:
+		return fmt.Errorf("%w: HTTP %d", order.ErrPaymentProcessingUncertain, resp.StatusCode)
+	}
 }
