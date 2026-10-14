@@ -101,7 +101,9 @@ func (h *PaymentStatusHandler) readStatus(ctx context.Context, paymentID string)
 			FROM payment_attempts
 			WHERE payment_intent_id = p.id
 			ORDER BY attempt_number DESC
-		)
+			LIMIT 1
+		) a ON TRUE
+		WHERE p.id = $1
 	`
 
 	result := &internalPaymentStatus{
@@ -147,7 +149,7 @@ func (h *PaymentStatusHandler) readStatus(ctx context.Context, paymentID string)
 
 		for _, action := range raw.Actions {
 			switch action.Descriptor {
-			case "QR_STRING", "WEB_URL":
+			case "QR_STRING", "WEB_URL", "VIRTUAL_ACCOUNT_NUMBER", "PAYMENT_CODE":
 				if action.Value != "" {
 					result.Actions = append(result.Actions, action)
 				}

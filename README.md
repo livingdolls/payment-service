@@ -3,6 +3,23 @@
 Service Go untuk membuat payment intent, mengirim payment request ke Xendit v3,
 menerima webhook, dan menjalankan reconciliation. Proyek ini masih dalam pengembangan.
 
+## Frontend React
+
+Dashboard React tersedia di [`frontend/`](frontend/README.md), dengan ringkasan,
+pembuatan dan pemrosesan pembayaran, instruksi QRIS/virtual account, pencarian
+status, rekonsiliasi admin, ekspor CSV, serta mode demo dan mode gelap.
+
+```sh
+cd frontend
+npm ci
+npm run dev
+```
+
+Buka `http://127.0.0.1:5173`. Jalankan API di terminal terpisah. Konfigurasi
+proxy mengikuti `.env` proyek (`PAYMENT_SERVICE_URL`, `PAYMENT_INTERNAL_TOKEN`,
+dan `ADMIN_API_TOKEN`); token hanya digunakan pada server frontend.
+Lihat [panduan frontend](frontend/README.md) untuk konfigurasi dan pengujian.
+
 ## Development dengan Makefile
 
 Butuh GNU Make, Bash, Go 1.26, Docker Compose, dan `goose` di PATH. Siapkan `.env`

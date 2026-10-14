@@ -37,10 +37,11 @@ import (
 )
 
 const (
-	webhookToken = "integration-webhook-token"
-	adminToken   = "integration-admin-token-at-least-32-characters"
-	adminActor   = "integration-test-operator"
-	amount       = int64(50000)
+	webhookToken  = "integration-webhook-token"
+	adminToken    = "integration-admin-token-at-least-32-characters"
+	adminActor    = "integration-test-operator"
+	internalToken = "integration-internal-token-at-least-32-characters"
+	amount        = int64(50000)
 )
 
 type harness struct {
@@ -180,6 +181,7 @@ func newHarness(t *testing.T, status string) *harness {
 		handler.NewReconciliationReviewHandler(application.NewReconciliationReviewUseCase(reviewRepo)),
 		adminToken,
 		adminActor,
+		internalToken,
 	))
 	t.Cleanup(api.Close)
 	return &harness{
