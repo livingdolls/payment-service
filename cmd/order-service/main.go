@@ -78,9 +78,11 @@ func main() {
 	orderConsumer := order.NewConsumer(orderRepository)
 
 	checkoutService := order.NewCheckoutService(orderRepository, paymentClient)
+	paymentFlowService := order.NewPaymentFlowService(orderRepository, paymentClient)
 
 	orderHandler := orderhttp.NewHandler(orderConsumer, serviceToken)
 	checkoutHandler := orderhttp.NewCheckoutHandler(checkoutService)
+	paymentFlowHandler := orderhttp.NewPaymentFlowHandler(paymentFlowService)
 
 	router := gin.New()
 
@@ -89,8 +91,20 @@ func main() {
 		gin.Recovery(),
 	)
 
+	customerRoutes := router.Group(
+		"/orders",
+		middleware.RequireCustomerJWT(
+			jwtSecret,
+			jwtIssuer,
+			jwtAudience,
+		),
+	)
+
 	router.POST("/internal/events/payments", orderHandler.ConsumePaymentEvent)
-	router.POST("/orders/:order_id/checkout", middleware.RequireServiceToken(checkoutToken), checkoutHandler.Start)
+
+	customerRoutes.POST("/:order_id/checkout", checkoutHandler.Start)
+	customerRoutes.POST("/:order_id/pay", paymentFlowHandler.Pay)
+	customerRoutes.GET("/:order_id/payment_status", paymentFlowHandler.Status)
 
 	server := &http.Server{
 		Addr:              net.JoinHostPort("127.0.0.1", serverPort),

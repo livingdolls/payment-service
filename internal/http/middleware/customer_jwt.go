@@ -8,7 +8,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func RequireCustoemrJWT(secret string, issuer string, audience string) gin.HandlerFunc {
+func RequireCustomerJWT(secret string, issuer string, audience string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authorization := c.GetHeader("Authorization")
 
