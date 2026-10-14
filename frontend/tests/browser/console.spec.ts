@@ -358,3 +358,63 @@ test("restores virtual account instructions from the API after reloading local h
     display_name: "Ayu Prameswari",
   });
 });
+
+test("blocks below-minimum BCA payments and accepts the exact minimum", async ({
+  page,
+  request,
+}) => {
+  await page.goto("/");
+  const dialog = page.getByRole("dialog");
+
+  for (const amount of [1000, 10000]) {
+    await page
+      .getByRole("button", { name: "Buat pembayaran", exact: true })
+      .first()
+      .click();
+    await dialog.getByLabel("ID pesanan").fill(`ORDER-BCA-MIN-${amount}`);
+    await dialog.getByLabel("Nominal pembayaran").fill(String(amount));
+    await dialog
+      .getByRole("button", { name: "Buat pembayaran", exact: true })
+      .click();
+    await expect(
+      dialog.getByRole("heading", { name: "Detail pembayaran" }),
+    ).toBeVisible();
+    await dialog
+      .getByLabel("Semua metode pembayaran")
+      .selectOption("BCA_VIRTUAL_ACCOUNT");
+    await dialog.getByLabel("Nama pembayar").fill("Ayu Prameswari");
+
+    const process = dialog.getByRole("button", {
+      name: "Lanjutkan dengan BCA",
+    });
+    if (amount < 10000) {
+      await expect(dialog.getByRole("alert")).toContainText(
+        /minimal Rp\s*10\.000/,
+      );
+      await expect(process).toBeDisabled();
+      const traffic = await (
+        await request.get(`${mockUrl}/__test/requests`)
+      ).json();
+      expect(
+        traffic.filter((entry: { path: string }) =>
+          entry.path.endsWith("/process"),
+        ),
+      ).toHaveLength(0);
+    } else {
+      await expect(process).toBeEnabled();
+      await process.click();
+      await expect(
+        dialog.getByText("8808123456789", { exact: true }),
+      ).toBeVisible();
+      const traffic = await (
+        await request.get(`${mockUrl}/__test/requests`)
+      ).json();
+      expect(
+        traffic.filter((entry: { path: string }) =>
+          entry.path.endsWith("/process"),
+        ),
+      ).toHaveLength(1);
+    }
+    await dialog.getByRole("button", { name: "Tutup dialog" }).click();
+  }
+});

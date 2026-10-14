@@ -468,6 +468,11 @@ function ChannelForm({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const channel = channelByCode(code)!;
+  const amountError =
+    channel.minimumAmount !== undefined &&
+    payment.amount < channel.minimumAmount
+      ? `${channel.name} Virtual Account membutuhkan nominal minimal ${money(channel.minimumAmount)}. Nominal pembayaran ini ${money(payment.amount)}. Buat pembayaran baru dengan nominal yang memenuhi batas tersebut.`
+      : "";
 
   function changeChannel(next: Channel) {
     setCode(next.code);
@@ -478,6 +483,7 @@ function ChannelForm({
   async function submit(event: React.SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
     if (busy) return;
+    if (amountError) return;
     setError("");
     let properties: Record<string, unknown>;
     try {
@@ -709,10 +715,11 @@ function ChannelForm({
         </>
       ) : null}
       {error ? <InlineError message={error} /> : null}
+      {amountError ? <InlineError message={amountError} /> : null}
       <Button
         type="submit"
         className="full-width"
-        disabled={busy}
+        disabled={busy || !!amountError}
         icon={QrCodeIcon}
       >
         {busy ? (

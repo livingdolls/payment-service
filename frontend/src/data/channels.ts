@@ -9,6 +9,7 @@ export interface Channel {
   color: string;
   available: boolean;
   properties: "none" | "name" | "return_url" | "phone" | "cashtag" | "card";
+  minimumAmount?: number;
   note?: string;
 }
 
@@ -45,6 +46,8 @@ export const channels: Channel[] = [
     color,
     available: true,
     properties: "name",
+    // https://docs.xendit.co/docs/bca-virtual-account (checked 2026-10-14)
+    minimumAmount: code === "BCA" ? 10000 : undefined,
   })),
   ...[
     ["DANA", "DANA", "#2383bb"],
