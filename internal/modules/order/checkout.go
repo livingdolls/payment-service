@@ -9,6 +9,8 @@ import (
 type CheckoutOrder struct {
 	ID string
 
+	CustomerID *string
+
 	Amount   int64
 	Currency string
 
@@ -68,13 +70,20 @@ func NewCheckoutService(
 	}
 }
 
-func (s *CheckoutService) Start(ctx context.Context, orderID string) (*CheckoutResult, error) {
+func (s *CheckoutService) Start(ctx context.Context, orderID string, customerID string) (*CheckoutResult, error) {
 	order, err := s.orders.GetForCheckout(
 		ctx,
 		orderID,
 	)
 
 	if err != nil {
+		return nil, err
+	}
+
+	if err := RequireOrderOwner(
+		order,
+		customerID,
+	); err != nil {
 		return nil, err
 	}
 

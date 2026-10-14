@@ -36,6 +36,8 @@ func NewRouter(db *pgxpool.Pool, paymentHandler *handler.PaymentHandler, webhook
 		})
 	})
 
+	paymentStatusHandler := handler.NewPaymentStatusHandler(db)
+
 	v1 := router.Group("/v1")
 	webhooks := router.Group("/webhooks")
 	admin := router.Group("/admin", middleware.RequireAdmin(adminToken, adminActor))
@@ -54,6 +56,8 @@ func NewRouter(db *pgxpool.Pool, paymentHandler *handler.PaymentHandler, webhook
 	admin.POST("/payment-attempts/:attempt_id/requeue-reconciliation", reviewHandler.Requeue)
 
 	internal.POST("/payments", paymentHandler.Create)
+	internal.GET("/payments/:payment_id/status", paymentStatusHandler.Get)
+	internal.POST("/payment-attempts/:attempt_id/process", paymentHandler.Process)
 
 	return router
 }

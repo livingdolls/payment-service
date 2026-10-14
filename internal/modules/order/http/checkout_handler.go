@@ -31,7 +31,7 @@ func (h *CheckoutHandler) Start(c *gin.Context) {
 		return
 	}
 
-	result, err := h.service.Start(c.Request.Context(), orderID)
+	result, err := h.service.Start(c.Request.Context(), orderID, c.GetString("customer_id"))
 
 	if err != nil {
 		switch {

@@ -25,6 +25,9 @@ func main() {
 	serviceToken := os.Getenv("ORDER_SERVICE_TOKEN")
 	serverPort := os.Getenv("ORDER_HTTP_PORT")
 	checkoutToken := os.Getenv("CHECKOUT_TEST_TOKEN")
+	jwtSecret := os.Getenv("CUSTOMER_JWT_SECRET")
+	jwtIssuer := os.Getenv("CUSTOMER_JWT_ISSUER")
+	jwtAudience := os.Getenv("CUSTOMER_JWT_AUDIENCE")
 
 	if serverPort == "" {
 		serverPort = "8181"
@@ -41,6 +44,10 @@ func main() {
 	if len(checkoutToken) < 32 {
 		log.Fatal("CHECKOUT_TEST_TOKEN is required")
 
+	}
+
+	if len(jwtSecret) < 32 || jwtIssuer == "" || jwtAudience == "" {
+		log.Fatalf("customer JWT configuration is invalid")
 	}
 
 	ctx, stop := signal.NotifyContext(

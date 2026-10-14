@@ -194,6 +194,7 @@ func (r *Repository) GetForCheckout(ctx context.Context, orderID string) (*order
 	const query = `
 		SELECT
 			id,
+			customer_id,
 			amount,
 			currency,
 			status,
@@ -210,6 +211,7 @@ func (r *Repository) GetForCheckout(ctx context.Context, orderID string) (*order
 		orderID,
 	).Scan(
 		&result.ID,
+		&result.CustomerID,
 		&result.Amount,
 		&result.Currency,
 		&result.Status,
